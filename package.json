@@ -1,0 +1,14 @@
+{
+  "name": "goodreads-browser",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browse your Goodreads library locally and publish the static site to GitHub Pages.",
+  "scripts": {
+    "sync:static": "node scripts/sync-static-data.js",
+    "serve:static": "python3 -m http.server 3000 -d public"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "playwright": "^1.58.2"
+  }
+}

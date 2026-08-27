@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Local browser profile/session (contains cookies/local state)
+.playwright/
+
+# User-specific configuration
+/config.json
+
+# Local personal exports and generated raw source files
+data/*.csv
+.temp_*.json
+.temp_*/
+
+# Copilot session files
+copilot-session-*.md
+
+# Logs / misc
+*.log
+.DS_Store

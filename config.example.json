@@ -1,0 +1,8 @@
+{
+  "goodreads": {
+    "displayName": "Your Name",
+    "publicDisplayName": "Mi biblioteca",
+    "profileUrl": "https://www.goodreads.com/user/show/123456-your-name",
+    "profileDir": ".playwright/goodreads-profile"
+  }
+}

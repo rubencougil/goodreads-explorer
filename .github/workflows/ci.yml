@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Node scripts syntax
+        run: |
+          node --check public/app.js
+          node --check public/stats.js
+
+      - name: Serve static files and smoke test
+        run: |
+          set -euo pipefail
+          npm run serve:static > server.log 2>&1 &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID" EXIT
+
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3000 > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          curl -fsS http://127.0.0.1:3000/data/library.json > /dev/null
+          curl -fsS http://127.0.0.1:3000/stats.html > /dev/null
+
+      - name: Upload server log on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: server-log
+          path: server.log

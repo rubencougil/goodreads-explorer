@@ -1,0 +1,15 @@
+{
+  "name": "Goodreads Browser",
+  "short_name": "GR Browser",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3eee2",
+  "theme_color": "#f3eee2",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

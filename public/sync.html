@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+    <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+    <title>Goodreads Browser Sincronización</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="sync-page">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand-mark" href="index.html">Goodreads Browser</a>
+        <nav class="top-links" aria-label="Principal">
+          <a href="index.html">Biblioteca</a>
+          <a href="stats.html">Estadísticas</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page-shell sync-shell">
+      <section class="hero-card compact-hero">
+        <p class="eyebrow">Sincronización local</p>
+        <h1>Actualiza tus datos estáticos de Goodreads en local.</h1>
+        <p class="hero-copy">
+          La web publicada es estática, así que el login y la exportación de Goodreads ocurren en tu máquina.
+        </p>
+      </section>
+
+      <section class="stats-grid sync-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Última actualización</p>
+              <h2>Estado actual de la biblioteca</h2>
+            </div>
+          </div>
+          <div id="sync-summary" class="stack-list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Comandos</p>
+              <h2>Flujo recomendado</h2>
+            </div>
+          </div>
+          <div class="command-stack">
+            <pre><code>npm install
+npm run sync:static
+npm run serve:static</code></pre>
+          </div>
+          <p class="meta-text">
+            Primer uso: se abre una ventana del navegador para iniciar sesión en Goodreads. Los siguientes usos reutilizan la sesión guardada.
+          </p>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Por qué solo local</p>
+              <h2>Sobre GitHub Actions</h2>
+            </div>
+          </div>
+          <div class="stack-list">
+            <p>El despliegue en GitHub Pages sí está automatizado.</p>
+            <p>La exportación de Goodreads se mantiene en local porque depende de tu sesión privada iniciada.</p>
+            <p>Así el proyecto es más simple, más seguro y mucho menos frágil que un scraping en la nube.</p>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="sync.js"></script>
+  </body>
+</html>

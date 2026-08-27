@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+    <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+    <title>Goodreads Browser</title>
+    <meta
+      name="description"
+      content="Explora tu biblioteca de Goodreads con portadas, filtros rápidos, paginación y enlaces directos a libros y autores."
+    />
+    <meta name="theme-color" content="#f3eee2" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="library-page">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand-mark" href="index.html">Goodreads Browser</a>
+        <nav class="top-links" aria-label="Principal">
+          <a class="is-active" href="index.html">Biblioteca</a>
+          <a href="stats.html">Estadísticas</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page-shell library-shell">
+      <section class="hero-card">
+        <p class="eyebrow">Biblioteca privada</p>
+        <div class="hero-grid">
+          <div>
+            <h1 id="hero-title">Tu biblioteca de Goodreads, lista para navegar rápido.</h1>
+            <p id="hero-description" class="hero-copy">
+              Cargando tu biblioteca y preparando los filtros...
+            </p>
+          </div>
+          <div class="hero-stats">
+            <div class="metric-tile">
+              <span class="metric-label">Libros</span>
+              <strong id="metric-books">-</strong>
+            </div>
+            <div class="metric-tile">
+              <span class="metric-label">Tu media</span>
+              <strong id="metric-rating">-</strong>
+            </div>
+            <div class="metric-tile">
+              <span class="metric-label">Estanterías</span>
+              <strong id="metric-shelves">-</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <aside class="panel filter-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Filtros</p>
+              <h2>Encuentra cualquier libro</h2>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>Búsqueda</span>
+            <input id="search-input" type="search" placeholder="Título, autor o estantería..." />
+          </label>
+
+          <label class="field">
+            <span>Estantería</span>
+            <select id="shelf-filter">
+              <option value="all">Todas</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Estado</span>
+            <select id="status-filter">
+              <option value="all">Cualquiera</option>
+              <option value="read">Leído</option>
+              <option value="currently-reading">Leyendo</option>
+              <option value="to-read">Pendiente</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Nota mínima</span>
+            <select id="rating-filter">
+              <option value="0">Todas</option>
+              <option value="1">1+</option>
+              <option value="2">2+</option>
+              <option value="3">3+</option>
+              <option value="4">4+</option>
+              <option value="5">5</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Año de publicación</span>
+            <select id="year-filter">
+              <option value="all">Todos</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Ordenar por</span>
+            <select id="sort-by">
+              <option value="date-read-desc">Fecha leída, más reciente</option>
+              <option value="rating-desc">Tu nota, mayor a menor</option>
+              <option value="average-rating-desc">Nota Goodreads, mayor a menor</option>
+              <option value="title-asc">Título A-Z</option>
+              <option value="author-asc">Autor A-Z</option>
+              <option value="year-desc">Año, más nuevo</option>
+              <option value="date-added-desc">Fecha añadida, más reciente</option>
+            </select>
+          </label>
+        </aside>
+
+        <section class="panel results-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Biblioteca</p>
+              <h2 id="results-title">Tus libros</h2>
+            </div>
+            <p id="results-meta" class="meta-text">Cargando...</p>
+          </div>
+
+          <div id="results" class="book-grid"></div>
+
+          <div id="empty-state" class="empty-state" hidden>
+            <h3>No hay libros con estos filtros.</h3>
+            <p>Prueba a limpiar algún filtro o vuelve a sincronizar manualmente.</p>
+          </div>
+
+          <div id="pagination" class="pagination" hidden>
+            <button id="prev-page" class="nav-button" type="button">Anterior</button>
+            <span id="page-info" class="page-info"></span>
+            <button id="next-page" class="nav-button" type="button">Siguiente</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <template id="book-card-template">
+      <article class="book-card">
+        <a class="book-cover-link" href="" target="_blank" rel="noreferrer">
+          <div class="book-cover-frame">
+            <img class="book-cover" src="" alt="" loading="lazy" />
+            <div class="book-cover-fallback" hidden></div>
+          </div>
+        </a>
+        <div class="book-card-body">
+          <div class="book-card-topline">
+            <span class="rating-pill your-rating"></span>
+            <span class="rating-pill community-rating"></span>
+          </div>
+          <h3 class="book-title"></h3>
+          <p class="book-author-row">
+            <a class="book-author" href="" target="_blank" rel="noreferrer"></a>
+          </p>
+          <p class="book-meta"></p>
+          <p class="book-dates"></p>
+          <div class="book-shelves"></div>
+          <p class="book-review"></p>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
