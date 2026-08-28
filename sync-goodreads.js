@@ -63,6 +63,16 @@ function parseDate(value) {
   return direct.toISOString().slice(0, 10);
 }
 
+function parseDateScore(value) {
+  const text = String(value || '').trim();
+  if (!text) {
+    return 0;
+  }
+
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
 function splitShelves(value) {
   return String(value || '')
     .split(/[,\s]+/)
@@ -173,7 +183,70 @@ function mergeCachedEnrichment(book, cachedBook) {
       : cachedBook.averageRating,
     authorUrl: String(book.authorUrl || '').trim() ? book.authorUrl : String(cachedBook.authorUrl || '').trim(),
     coverUrl: String(book.coverUrl || '').trim() ? book.coverUrl : String(cachedBook.coverUrl || '').trim(),
+    dateRead: String(book.dateRead || '').trim() ? book.dateRead : String(cachedBook.dateRead || '').trim(),
+    rating: Number.isFinite(Number(book.rating)) && Number(book.rating) > 0
+      ? book.rating
+      : Number.isFinite(Number(cachedBook.rating)) && Number(cachedBook.rating) > 0
+        ? cachedBook.rating
+        : book.rating,
     url: String(book.url || '').trim() ? book.url : String(cachedBook.url || '').trim()
+  };
+}
+
+function repairBookStatus(book) {
+  const repaired = {
+    ...book,
+    bookshelves: Array.isArray(book.bookshelves)
+      ? book.bookshelves.filter((shelf) => String(shelf || '').trim() !== 'currently-reading')
+      : book.bookshelves
+  };
+
+  if (
+    String(repaired.exclusiveShelf || '').trim() === 'currently-reading' &&
+    String(repaired.dateRead || '').trim()
+  ) {
+    repaired.exclusiveShelf = 'read';
+  }
+
+  return repaired;
+}
+
+function repairBooksFromCache(books, cachedBooks) {
+  const stats = {
+    restoredDateRead: 0,
+    restoredRating: 0,
+    repairedCurrentlyReading: 0
+  };
+
+  const repairedBooks = books.map((book) => {
+    const cachedBook = cachedBooks.get(String(book.bookId || '').trim());
+    const before = {
+      dateRead: String(book.dateRead || '').trim(),
+      rating: Number(book.rating) || 0,
+      exclusiveShelf: String(book.exclusiveShelf || '').trim()
+    };
+
+    let nextBook = mergeCachedEnrichment(book, cachedBook);
+    nextBook = repairBookStatus(nextBook);
+
+    if (!before.dateRead && String(nextBook.dateRead || '').trim()) {
+      stats.restoredDateRead += 1;
+    }
+
+    if (!(before.rating > 0) && Number(nextBook.rating) > 0) {
+      stats.restoredRating += 1;
+    }
+
+    if (before.exclusiveShelf === 'currently-reading' && nextBook.exclusiveShelf === 'read') {
+      stats.repairedCurrentlyReading += 1;
+    }
+
+    return nextBook;
+  });
+
+  return {
+    books: repairedBooks,
+    stats
   };
 }
 
@@ -485,6 +558,89 @@ async function enrichBooks(books, onProgress) {
   return enriched;
 }
 
+function validateLibraryBooks(books) {
+  const safeBooks = Array.isArray(books) ? books : [];
+  const categories = [
+    {
+      key: 'readMissingDateRead',
+      severity: 'warning',
+      title: 'Libros en read sin dateRead',
+      help: 'Usa dateAdded como respaldo para ordenar y, si puedes, intenta recuperar la fecha de lectura en el sync.',
+      matches: (book) =>
+        String(book.exclusiveShelf || '').trim() === 'read' &&
+        !String(book.dateRead || '').trim()
+    },
+    {
+      key: 'currentlyReadingWithDateRead',
+      severity: 'warning',
+      title: 'currently-reading con dateRead',
+      help: 'Corrige el estado del libro o limpia dateRead para que no haya contradicción.',
+      matches: (book) =>
+        String(book.exclusiveShelf || '').trim() === 'currently-reading' &&
+        Boolean(String(book.dateRead || '').trim())
+    },
+    {
+      key: 'zeroRatedWithDateRead',
+      severity: 'info',
+      title: 'rating 0 con fecha de lectura',
+      help: 'Si Goodreads tenía nota, reintenta importar solo el rating de estos libros.',
+      matches: (book) => Number(book.rating) === 0 && Boolean(String(book.dateRead || '').trim())
+    },
+    {
+      key: 'dateReadBeforeDateAdded',
+      severity: 'info',
+      title: 'dateRead anterior a dateAdded',
+      help: 'Suele ser un histórico importado más tarde; solo requiere revisión si la fecha es imposible.',
+      matches: (book) => {
+        const readScore = parseDateScore(book.dateRead);
+        const addedScore = parseDateScore(book.dateAdded);
+        return Boolean(readScore && addedScore && readScore < addedScore);
+      }
+    }
+  ];
+
+  const categoriesWithSamples = categories.map((category) => {
+    const matches = safeBooks.filter(category.matches);
+    return {
+      key: category.key,
+      severity: category.severity,
+      title: category.title,
+      help: category.help,
+      count: matches.length,
+      samples: matches.slice(0, 5).map((book) => ({
+        bookId: String(book.bookId || '').trim(),
+        title: String(book.title || '').trim(),
+        exclusiveShelf: String(book.exclusiveShelf || '').trim(),
+        dateRead: String(book.dateRead || '').trim(),
+        dateAdded: String(book.dateAdded || '').trim(),
+        rating: Number(book.rating) || 0
+      }))
+    };
+  });
+
+  const counts = categoriesWithSamples.reduce(
+    (accumulator, category) => {
+      accumulator[category.key] = category.count;
+      if (category.severity === 'warning') {
+        accumulator.warningCount += category.count;
+      } else {
+        accumulator.infoCount += category.count;
+      }
+      return accumulator;
+    },
+    {
+      warningCount: 0,
+      infoCount: 0
+    }
+  );
+
+  return {
+    hasWarnings: counts.warningCount > 0,
+    counts,
+    categories: categoriesWithSamples
+  };
+}
+
 function parseLibraryCsv(csvText) {
   const rows = parse(csvText, {
     bom: true,
@@ -638,11 +794,17 @@ async function syncGoodreads(options = {}) {
     const csvText = fs.readFileSync(csvPath, 'utf8');
     const books = parseLibraryCsv(csvText);
     const cachedBooks = readCachedLibraryBooks();
-    const hydratedBooks = books.map((book) => mergeCachedEnrichment(book, cachedBooks.get(String(book.bookId || '').trim())));
+    const hydrated = repairBooksFromCache(books, cachedBooks);
     const lastSyncedAt = new Date().toISOString();
 
     onProgress(`Parsed ${books.length} books from Goodreads export.`);
-    const enrichedBooks = await enrichBooks(hydratedBooks, onProgress);
+    if (hydrated.stats.restoredDateRead || hydrated.stats.restoredRating || hydrated.stats.repairedCurrentlyReading) {
+      onProgress(
+        `Repaired ${hydrated.stats.restoredDateRead} fechas de lectura, ${hydrated.stats.restoredRating} ratings y ${hydrated.stats.repairedCurrentlyReading} estados contradictorios desde la caché local.`
+      );
+    }
+
+    const enrichedBooks = await enrichBooks(hydrated.books, onProgress);
 
     return {
       profile: {
@@ -651,7 +813,8 @@ async function syncGoodreads(options = {}) {
       rawCsvPath: csvPath,
       count: enrichedBooks.length,
       lastSyncedAt,
-      books: enrichedBooks
+      books: enrichedBooks,
+      repairStats: hydrated.stats
     };
   } finally {
     await context.close();
@@ -660,5 +823,6 @@ async function syncGoodreads(options = {}) {
 
 module.exports = {
   parseLibraryCsv,
-  syncGoodreads
+  syncGoodreads,
+  validateLibraryBooks
 };

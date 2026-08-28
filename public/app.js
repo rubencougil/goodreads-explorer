@@ -146,6 +146,19 @@ function dateScore(value) {
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 }
 
+function readingOrderScore(book) {
+  const readScore = dateScore(book.dateRead);
+  if (readScore) {
+    return readScore;
+  }
+
+  if (deriveStatus(book) === 'read') {
+    return dateScore(book.dateAdded);
+  }
+
+  return 0;
+}
+
 function resolveBookUrl(book) {
   return book.url || book.searchUrl || '';
 }
@@ -272,7 +285,7 @@ function applyFilters() {
         return dateScore(right.dateAdded) - dateScore(left.dateAdded) || compareValues(left.title, right.title);
       case 'date-read-desc':
       default:
-        return dateScore(right.dateRead) - dateScore(left.dateRead) || compareValues(left.title, right.title);
+        return readingOrderScore(right) - readingOrderScore(left) || compareValues(left.title, right.title);
     }
   });
 

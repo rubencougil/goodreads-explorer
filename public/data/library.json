@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-08-28T11:06:54.292Z",
+  "generatedAt": "2026-08-28T13:43:44.528Z",
   "profile": {
     "displayName": "Mi biblioteca"
   },
   "library": {
     "count": 243,
-    "lastSyncedAt": "2026-08-28T11:06:52.874Z",
+    "lastSyncedAt": "2026-08-28T13:43:44.507Z",
     "books": [
       {
         "bookId": "247336784",
@@ -17,10 +17,8 @@
         "averageRating": 3.86,
         "year": "2024",
         "pages": 384,
-        "bookshelves": [
-          "currently-reading"
-        ],
-        "exclusiveShelf": "currently-reading",
+        "bookshelves": [],
+        "exclusiveShelf": "read",
         "dateRead": "2026-08-25",
         "dateAdded": "2026-08-24",
         "url": "https://www.goodreads.com/book/show/247336784",
@@ -2579,7 +2577,7 @@
         "exclusiveShelf": "read",
         "dateRead": "2022-03-28",
         "dateAdded": "2022-03-15",
-        "url": "/book/show/247747954-the-final-girl-support-group?from_search=true&from_srp=true&qid=lQWJyJXI4u&rank=1",
+        "url": "https://www.goodreads.com/book/show/55829194",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/nophoto/book/111x148._SX318_.png",
         "searchUrl": "https://www.goodreads.com/search?q=The%20Final%20Girl%20Support%20Group%20Grady%20Hendrix&search_type=books"
       },
@@ -4383,6 +4381,163 @@
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1488392710i/29947651._SX318_.jpg",
         "searchUrl": "https://www.goodreads.com/search?q=Endurance%3A%20A%20Year%20in%20Space%2C%20A%20Lifetime%20of%20Discovery%20Scott%20%20%20%20Kelly&search_type=books"
       }
-    ]
+    ],
+    "validation": {
+      "hasWarnings": true,
+      "counts": {
+        "warningCount": 78,
+        "infoCount": 8,
+        "readMissingDateRead": 78,
+        "currentlyReadingWithDateRead": 0,
+        "zeroRatedWithDateRead": 4,
+        "dateReadBeforeDateAdded": 4
+      },
+      "categories": [
+        {
+          "key": "readMissingDateRead",
+          "severity": "warning",
+          "title": "Libros en read sin dateRead",
+          "help": "Usa dateAdded como respaldo para ordenar y, si puedes, intenta recuperar la fecha de lectura en el sync.",
+          "count": 78,
+          "samples": [
+            {
+              "bookId": "17415342",
+              "title": "El fin de los días",
+              "exclusiveShelf": "read",
+              "dateRead": "",
+              "dateAdded": "2026-07-26",
+              "rating": 5
+            },
+            {
+              "bookId": "10576",
+              "title": "It (Eso)",
+              "exclusiveShelf": "read",
+              "dateRead": "",
+              "dateAdded": "2021-02-15",
+              "rating": 5
+            },
+            {
+              "bookId": "42764519",
+              "title": "Historia Freak del Cine. Volumen I: Un relato sobre el cine, desde los inicios hasta Kubrick,a través de 203 curiosidades (Spanish Edition)",
+              "exclusiveShelf": "read",
+              "dateRead": "",
+              "dateAdded": "2025-01-04",
+              "rating": 3
+            },
+            {
+              "bookId": "129235962",
+              "title": "Carbono y Silicio",
+              "exclusiveShelf": "read",
+              "dateRead": "",
+              "dateAdded": "2025-01-17",
+              "rating": 5
+            },
+            {
+              "bookId": "7114018",
+              "title": "A esmorga",
+              "exclusiveShelf": "read",
+              "dateRead": "",
+              "dateAdded": "2021-02-15",
+              "rating": 5
+            }
+          ]
+        },
+        {
+          "key": "currentlyReadingWithDateRead",
+          "severity": "warning",
+          "title": "currently-reading con dateRead",
+          "help": "Corrige el estado del libro o limpia dateRead para que no haya contradicción.",
+          "count": 0,
+          "samples": []
+        },
+        {
+          "key": "zeroRatedWithDateRead",
+          "severity": "info",
+          "title": "rating 0 con fecha de lectura",
+          "help": "Si Goodreads tenía nota, reintenta importar solo el rating de estos libros.",
+          "count": 4,
+          "samples": [
+            {
+              "bookId": "247336784",
+              "title": "Todos los demonios del infierno",
+              "exclusiveShelf": "read",
+              "dateRead": "2026-08-25",
+              "dateAdded": "2026-08-24",
+              "rating": 0
+            },
+            {
+              "bookId": "60992641",
+              "title": "Crims. Tot el que llegireu és real",
+              "exclusiveShelf": "read",
+              "dateRead": "2022-05-11",
+              "dateAdded": "2022-05-08",
+              "rating": 0
+            },
+            {
+              "bookId": "52318674",
+              "title": "14 maneras de destruir la humanidad",
+              "exclusiveShelf": "read",
+              "dateRead": "2022-12-09",
+              "dateAdded": "2022-11-19",
+              "rating": 0
+            },
+            {
+              "bookId": "12152172",
+              "title": "Cita con Rama (Rama #1)",
+              "exclusiveShelf": "read",
+              "dateRead": "2022-05-11",
+              "dateAdded": "2022-04-28",
+              "rating": 0
+            }
+          ]
+        },
+        {
+          "key": "dateReadBeforeDateAdded",
+          "severity": "info",
+          "title": "dateRead anterior a dateAdded",
+          "help": "Suele ser un histórico importado más tarde; solo requiere revisión si la fecha es imposible.",
+          "count": 4,
+          "samples": [
+            {
+              "bookId": "17912313",
+              "title": "The Boys Integral, Volumen 1",
+              "exclusiveShelf": "read",
+              "dateRead": "2022-12-31",
+              "dateAdded": "2023-01-22",
+              "rating": 5
+            },
+            {
+              "bookId": "61036049",
+              "title": "Código Sostenible",
+              "exclusiveShelf": "read",
+              "dateRead": "2021-12-31",
+              "dateAdded": "2022-06-28",
+              "rating": 5
+            },
+            {
+              "bookId": "25573579",
+              "title": "Mad Max: Fury Road",
+              "exclusiveShelf": "read",
+              "dateRead": "2021-12-31",
+              "dateAdded": "2022-05-08",
+              "rating": 3
+            },
+            {
+              "bookId": "59705198",
+              "title": "La guía FilmAffinity: Breve historia del cine",
+              "exclusiveShelf": "read",
+              "dateRead": "2021-12-31",
+              "dateAdded": "2022-01-09",
+              "rating": 4
+            }
+          ]
+        }
+      ]
+    },
+    "repairStats": {
+      "restoredDateRead": 0,
+      "restoredRating": 0,
+      "repairedCurrentlyReading": 1
+    }
   }
 }
