@@ -37,18 +37,12 @@ npm run sync:static
 
 Notes:
 
-- The first run opens Chromium with a persistent profile so you can sign in to Goodreads.
-- After that, the session is reused from `.playwright/goodreads-profile`.
+- The sync runs headless by default and reuses the persistent session from `.playwright/goodreads-profile`.
+- If Goodreads asks you to sign in again, run `GOODREADS_HEADLESS=false npm run sync:static` once to complete the login in a visible browser.
 - The generated static data is written to `public/data/library.json`.
 - Raw CSV exports are kept in `data/`.
 - `publicDisplayName` is optional but recommended if you want the published site to avoid showing your real name.
 - The public JSON is sanitized to keep only the fields used by the site and avoid publishing Goodreads export fields such as private notes, owned copies, ISBNs, or other raw metadata.
-
-If you want to reuse the saved login without a visible browser window:
-
-```bash
-GOODREADS_HEADLESS=true npm run sync:static
-```
 
 ## Local preview
 

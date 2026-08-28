@@ -12,6 +12,7 @@ const DEFAULT_DOWNLOAD_DIR = path.join(ROOT_DIR, 'data');
 const LOGIN_WAIT_MS = 10 * 60 * 1000;
 const EXPORT_WAIT_MS = 4 * 60 * 1000;
 const ENRICH_CONCURRENCY = 6;
+const OUTPUT_PATH = path.join(ROOT_DIR, 'public', 'data', 'library.json');
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -91,6 +92,98 @@ function buildBookSearchUrl({ title, author }) {
     : '';
 }
 
+function findLatestExportCsv() {
+  if (!fs.existsSync(DEFAULT_DOWNLOAD_DIR)) {
+    return '';
+  }
+
+  const entries = fs
+    .readdirSync(DEFAULT_DOWNLOAD_DIR)
+    .filter((name) => /^goodreads-library-.*\.csv$/i.test(name))
+    .map((name) => {
+      const filePath = path.join(DEFAULT_DOWNLOAD_DIR, name);
+      return {
+        filePath,
+        mtimeMs: fs.statSync(filePath).mtimeMs
+      };
+    })
+    .sort((left, right) => right.mtimeMs - left.mtimeMs);
+
+  return entries[0]?.filePath || '';
+}
+
+function readCachedLibraryBooks() {
+  const payload = readJson(OUTPUT_PATH, null);
+  const books = Array.isArray(payload?.library?.books) ? payload.library.books : [];
+
+  return books.reduce((map, book) => {
+    const bookId = String(book?.bookId || '').trim();
+    if (bookId) {
+      map.set(bookId, book);
+    }
+    return map;
+  }, new Map());
+}
+
+function normalizeSearchTitle(title) {
+  return String(title || '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[“”"']/g, '')
+    .split(/\s*[:–—-]\s*/)[0]
+    .split(/\s*\.\s*/)[0]
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildSearchQueries(book) {
+  const title = String(book?.title || '').trim();
+  const author = String(book?.author || '').trim();
+  const authorLast = author.split(/\s+/).filter(Boolean).pop() || '';
+  const coreTitle = normalizeSearchTitle(title);
+  const shortTitle = coreTitle.split(/\s+/).slice(0, 6).join(' ').trim();
+  const mediumTitle = coreTitle.split(/\s+/).slice(0, 8).join(' ').trim();
+
+  const queries = [
+    [title, author],
+    [coreTitle, author],
+    [coreTitle, authorLast],
+    [shortTitle, author],
+    [shortTitle, authorLast],
+    [mediumTitle, author],
+    [mediumTitle, authorLast],
+    [coreTitle],
+    [shortTitle],
+    [mediumTitle]
+  ]
+    .map((parts) => parts.filter(Boolean).join(' ').trim())
+    .filter(Boolean);
+
+  return [...new Set(queries)].map((query) => buildBookSearchUrl({ title: query, author: '' }));
+}
+
+function mergeCachedEnrichment(book, cachedBook) {
+  if (!cachedBook) {
+    return book;
+  }
+
+  return {
+    ...book,
+    averageRating: Number.isFinite(Number(book.averageRating)) && Number(book.averageRating) > 0
+      ? book.averageRating
+      : cachedBook.averageRating,
+    authorUrl: String(book.authorUrl || '').trim() ? book.authorUrl : String(cachedBook.authorUrl || '').trim(),
+    coverUrl: String(book.coverUrl || '').trim() ? book.coverUrl : String(cachedBook.coverUrl || '').trim(),
+    url: String(book.url || '').trim() ? book.url : String(cachedBook.url || '').trim()
+  };
+}
+
+function needsEnrichment(book) {
+  return !String(book.coverUrl || '').trim() ||
+    !String(book.authorUrl || '').trim() ||
+    !Number.isFinite(Number(book.averageRating)) ||
+    Number(book.averageRating) <= 0;
+}
+
 function normalizeRecord(record) {
   const row = normalizeRowKeys(record);
   const bookId = String(row['Book Id'] || row['Book ID'] || '').trim();
@@ -151,6 +244,31 @@ function decodeHtml(value) {
   return String(value || '').replace(/&(amp|quot|#39|apos|lt|gt);/g, (match) => decodeHtmlEntity(match));
 }
 
+function upgradeGoodreadsCoverUrl(url) {
+  const text = String(url || '').trim();
+  if (!text || !/gr-assets\.com|goodreads\.com/i.test(text)) {
+    return text;
+  }
+
+  if (/_SX50_SY75_/i.test(text)) {
+    return text.replace(/_SX50_SY75_/i, '_SX318_SY475_');
+  }
+
+  if (/_SY75_/i.test(text)) {
+    return text.replace(/_SY75_/i, '_SY318_');
+  }
+
+  if (/_SX50_/i.test(text)) {
+    return text.replace(/_SX50_/i, '_SX318_');
+  }
+
+  if (/_SX/i.test(text)) {
+    return text.replace(/_SX\d+_/i, '_SX318_');
+  }
+
+  return text;
+}
+
 function fetchText(url) {
   return new Promise((resolve, reject) => {
     const req = https.get(
@@ -186,11 +304,32 @@ function extractJsonLdBlocks(html) {
     .filter(Boolean);
 }
 
-function parseBookPageMetadata(html) {
-  const blocks = extractJsonLdBlocks(html);
+function extractSearchResultBlock(html, bookId) {
+  const text = String(html || '');
+  const anchor = String(bookId || '').trim();
+
+  if (anchor) {
+    const anchorIndex = text.indexOf(`id="${anchor}"`);
+    if (anchorIndex !== -1) {
+      const start = text.lastIndexOf('<tr', anchorIndex);
+      const end = text.indexOf('</tr>', anchorIndex);
+      if (start !== -1 && end !== -1) {
+        return text.slice(start, end + 5);
+      }
+    }
+  }
+
+  const firstRowMatch = text.match(/<tr[^>]*itemscope[^>]*itemtype="http:\/\/schema\.org\/Book"[^>]*>[\s\S]*?<\/tr>/i);
+  return firstRowMatch ? firstRowMatch[0] : text;
+}
+
+function parseSearchResultMetadata(html, bookId) {
+  const block = extractSearchResultBlock(html, bookId);
+  const blocks = extractJsonLdBlocks(block);
   let averageRating = null;
   let coverUrl = '';
   let authorUrl = '';
+  let bookUrl = '';
 
   for (const block of blocks) {
     try {
@@ -204,7 +343,7 @@ function parseBookPageMetadata(html) {
         const authorLink = typeof authorNode?.url === 'string' ? authorNode.url : '';
 
         if (image && !coverUrl) {
-          coverUrl = image;
+          coverUrl = upgradeGoodreadsCoverUrl(image);
         }
 
         if (ratingValue !== null && averageRating === null) {
@@ -221,28 +360,35 @@ function parseBookPageMetadata(html) {
   }
 
   if (!coverUrl) {
-    const imageMatch = String(html || '').match(/"image"\s*:\s*"([^"]+)"/i);
+    const imageMatch =
+      block.match(/<img[^>]+class="[^"]*bookCover[^"]*"[^>]+src="([^"]+)"/i) ||
+      block.match(/<img[^>]+src="([^"]+)"[^>]+class="[^"]*bookCover[^"]*"/i);
     coverUrl = imageMatch ? decodeHtml(imageMatch[1]) : '';
+    coverUrl = upgradeGoodreadsCoverUrl(coverUrl);
   }
 
   if (averageRating === null) {
-    const ratingMatch =
-      String(html || '').match(/"ratingValue"\s*:\s*"([^"]+)"/i) ||
-      String(html || '').match(/averageRating["':\s>]+([0-9.]+)/i);
+    const ratingMatch = block.match(/([0-9.]+)\s+avg rating/i);
     averageRating = ratingMatch ? parseNumber(ratingMatch[1]) : null;
   }
 
   if (!authorUrl) {
-    const authorMatch = String(html || '').match(
-      /https:\/\/www\.goodreads\.com\/author\/show\/[0-9]+[^"' <]*/i
-    );
-    authorUrl = authorMatch ? authorMatch[0] : '';
+    const authorMatch =
+      block.match(/<a class="authorName"[^>]+href="([^"]+)"/i) ||
+      block.match(/https:\/\/www\.goodreads\.com\/author\/show\/[0-9]+[^"' <]*/i);
+    authorUrl = authorMatch ? decodeHtml(authorMatch[1] || authorMatch[0]) : '';
+  }
+
+  if (!bookUrl) {
+    const bookMatch = block.match(/<a class="bookTitle"[^>]+href="([^"]+)"/i);
+    bookUrl = bookMatch ? decodeHtml(bookMatch[1]) : '';
   }
 
   return {
     averageRating,
     coverUrl,
-    authorUrl
+    authorUrl,
+    bookUrl
   };
 }
 
@@ -266,11 +412,17 @@ async function mapWithConcurrency(items, limit, mapper) {
 async function enrichBooks(books, onProgress) {
   let resolvedRatings = 0;
   let resolvedCovers = 0;
+  const targets = books.filter(needsEnrichment);
 
-  const enriched = await mapWithConcurrency(books, ENRICH_CONCURRENCY, async (book, index) => {
-    const url = String(book?.url || '').trim();
+  if (!targets.length) {
+    onProgress?.('No hay portadas o metadatos de Goodreads pendientes de enriquecer.');
+    return books;
+  }
 
-    if (!url) {
+  const enrichedTargets = await mapWithConcurrency(targets, ENRICH_CONCURRENCY, async (book, index) => {
+    const urls = buildSearchQueries(book);
+
+    if (!urls.length) {
       return book;
     }
 
@@ -279,28 +431,54 @@ async function enrichBooks(books, onProgress) {
     }
 
     try {
-      const { statusCode, body } = await fetchText(url);
-      if (statusCode < 200 || statusCode >= 300 || !body) {
-        return book;
+      let nextBook = book;
+
+      for (const url of urls) {
+        const { statusCode, body } = await fetchText(url);
+        if (statusCode < 200 || statusCode >= 300 || !body) {
+          continue;
+        }
+
+        const metadata = parseSearchResultMetadata(body, book.bookId);
+        const updated = {
+          ...nextBook,
+          averageRating: metadata.averageRating !== null ? metadata.averageRating : nextBook.averageRating,
+          coverUrl: metadata.coverUrl || nextBook.coverUrl || '',
+          authorUrl: metadata.authorUrl || nextBook.authorUrl || '',
+          url: metadata.bookUrl || nextBook.url || ''
+        };
+
+        const pickedCover = Boolean(metadata.coverUrl);
+        const pickedRating = metadata.averageRating !== null;
+        const pickedAuthor = Boolean(metadata.authorUrl);
+        const pickedBookUrl = Boolean(metadata.bookUrl);
+        nextBook = updated;
+
+        if (pickedRating) {
+          resolvedRatings += 1;
+        }
+        if (pickedCover) {
+          resolvedCovers += 1;
+        }
+
+        if ((pickedCover && pickedRating) || (pickedCover && pickedAuthor && pickedBookUrl)) {
+          break;
+        }
       }
 
-      const metadata = parseBookPageMetadata(body);
-      if (metadata.averageRating !== null) {
-        resolvedRatings += 1;
-      }
-      if (metadata.coverUrl) {
-        resolvedCovers += 1;
-      }
-
-      return {
-        ...book,
-        averageRating: metadata.averageRating !== null ? metadata.averageRating : book.averageRating,
-        coverUrl: metadata.coverUrl || book.coverUrl || '',
-        authorUrl: metadata.authorUrl || book.authorUrl || ''
-      };
+      return nextBook;
     } catch (error) {
       return book;
     }
+  });
+
+  const enrichedById = new Map(
+    enrichedTargets.map((book) => [String(book.bookId || '').trim(), book])
+  );
+
+  const enriched = books.map((book) => {
+    const bookId = String(book.bookId || '').trim();
+    return enrichedById.get(bookId) || book;
   });
 
   onProgress?.(`Enriquecidos ${resolvedCovers} portadas y ${resolvedRatings} notas Goodreads.`);
@@ -329,9 +507,8 @@ async function waitUntilLoggedIn(page, onProgress, isHeadless) {
 
   if (await signInForm.first().isVisible().catch(() => false)) {
     if (isHeadless) {
-      throw new Error(
-        'Goodreads is asking for login, but the browser is running headless. Run the sync locally without GOODREADS_HEADLESS=true so you can sign in once and save the session.'
-      );
+      onProgress?.('Goodreads needs a fresh login and headless mode cannot complete it. Reusing the latest CSV export if available.');
+      return false;
     }
 
     onProgress?.(
@@ -357,10 +534,15 @@ async function waitUntilLoggedIn(page, onProgress, isHeadless) {
     const linkVisible = await exportLink.isVisible().catch(() => false);
 
     if (buttonVisible || linkVisible) {
-      return;
+      return true;
     }
 
     await sleep(800);
+  }
+
+  if (isHeadless) {
+    onProgress?.('Goodreads export control did not appear in time. Reusing the latest CSV export if available.');
+    return false;
   }
 
   throw new Error('Could not find the Goodreads export control after login.');
@@ -385,11 +567,11 @@ async function triggerExportDownload(page, onProgress) {
   const exportButton = page.getByRole('button', { name: /export library/i });
   const readyExportLink = page.locator('a[href*="/review_porter/export/"][href$=".csv"]');
 
-  if (await readyExportLink.first().isVisible().catch(() => false)) {
-    onProgress?.('Found an already-prepared Goodreads export file.');
-  } else if (await exportButton.isVisible().catch(() => false)) {
+  if (await exportButton.isVisible().catch(() => false)) {
     onProgress?.('Requesting Goodreads export file...');
     await exportButton.click();
+  } else if (await readyExportLink.first().isVisible().catch(() => false)) {
+    onProgress?.('Found an already-prepared Goodreads export file.');
   } else {
     throw new Error('Could not find the Goodreads export control.');
   }
@@ -407,7 +589,13 @@ async function triggerExportDownload(page, onProgress) {
 
 async function syncGoodreads(options = {}) {
   const config = normalizeConfig(options.config || {});
-  const isHeadless = process.env.GOODREADS_HEADLESS === 'true' || process.env.CI === 'true';
+  const headlessEnv = String(process.env.GOODREADS_HEADLESS || '').trim().toLowerCase();
+  const isHeadless =
+    process.env.CI === 'true' ||
+    headlessEnv === '' ||
+    headlessEnv === 'true' ||
+    headlessEnv === '1' ||
+    headlessEnv === 'yes';
   const onProgress = typeof options.onProgress === 'function' ? options.onProgress : () => {};
 
   fs.mkdirSync(DEFAULT_DOWNLOAD_DIR, { recursive: true });
@@ -431,19 +619,30 @@ async function syncGoodreads(options = {}) {
       waitUntil: 'domcontentloaded',
       timeout: 60_000
     });
-    await waitUntilLoggedIn(page, onProgress, isHeadless);
+    const readyForExport = await waitUntilLoggedIn(page, onProgress, isHeadless);
 
-    const download = await triggerExportDownload(page, onProgress);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const csvPath = path.join(DEFAULT_DOWNLOAD_DIR, `goodreads-library-${timestamp}.csv`);
-    await download.saveAs(csvPath);
+    let csvPath = '';
+    if (readyForExport) {
+      const download = await triggerExportDownload(page, onProgress);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      csvPath = path.join(DEFAULT_DOWNLOAD_DIR, `goodreads-library-${timestamp}.csv`);
+      await download.saveAs(csvPath);
+    } else {
+      csvPath = findLatestExportCsv();
+      if (!csvPath) {
+        throw new Error('No local Goodreads CSV export is available to reuse.');
+      }
+      onProgress?.(`Reusing existing CSV export at ${path.relative(ROOT_DIR, csvPath)}.`);
+    }
 
     const csvText = fs.readFileSync(csvPath, 'utf8');
     const books = parseLibraryCsv(csvText);
+    const cachedBooks = readCachedLibraryBooks();
+    const hydratedBooks = books.map((book) => mergeCachedEnrichment(book, cachedBooks.get(String(book.bookId || '').trim())));
     const lastSyncedAt = new Date().toISOString();
 
     onProgress(`Parsed ${books.length} books from Goodreads export.`);
-    const enrichedBooks = await enrichBooks(books, onProgress);
+    const enrichedBooks = await enrichBooks(hydratedBooks, onProgress);
 
     return {
       profile: {

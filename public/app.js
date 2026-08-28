@@ -150,6 +150,38 @@ function resolveBookUrl(book) {
   return book.url || book.searchUrl || '';
 }
 
+function buildGoodreadsCoverVariant(url, size) {
+  const text = String(url || '').trim();
+  if (!text || !/gr-assets\.com|goodreads\.com/i.test(text)) {
+    return '';
+  }
+
+  if (/_SX\d+_SY\d+_/i.test(text)) {
+    return text.replace(/_SX\d+_SY\d+_/i, `_SX${size}_SY${Math.round(size * 1.5)}_`);
+  }
+
+  if (/_SY\d+_/i.test(text)) {
+    return text.replace(/_SY\d+_/i, `_SY${size}_`);
+  }
+
+  if (/_SX\d+_/i.test(text)) {
+    return text.replace(/_SX\d+_/i, `_SX${size}_`);
+  }
+
+  return '';
+}
+
+function buildGoodreadsCoverSrcSet(url) {
+  const variants = [200, 318, 475]
+    .map((size) => {
+      const variant = buildGoodreadsCoverVariant(url, size);
+      return variant ? `${variant} ${size}w` : '';
+    })
+    .filter(Boolean);
+
+  return [...new Set(variants)].join(', ');
+}
+
 function renderSkeletonBooks() {
   if (!elements.results) {
     return;
@@ -252,6 +284,8 @@ function setCover(node, book, eager = false) {
   const fallback = node.querySelector('.book-cover-fallback');
   const coverUrl = String(book.coverUrl || '').trim();
   const label = book.title ? `Portada de ${book.title}` : 'Portada del libro';
+  const coverSrcSet = buildGoodreadsCoverSrcSet(coverUrl);
+  const coverSrc = buildGoodreadsCoverVariant(coverUrl, 318) || coverUrl;
 
   image.alt = label;
   image.decoding = 'async';
@@ -268,7 +302,9 @@ function setCover(node, book, eager = false) {
   fallback.hidden = true;
   image.loading = eager ? 'eager' : 'lazy';
   image.fetchPriority = eager ? 'high' : 'low';
-  image.src = coverUrl;
+  image.sizes = coverSrcSet ? '(max-width: 640px) 50vw, 198px' : '';
+  image.srcset = coverSrcSet;
+  image.src = coverSrc;
   image.onerror = () => {
     image.hidden = true;
     fallback.hidden = false;
@@ -298,8 +334,10 @@ function renderBooks(filtered) {
     const node = elements.template.content.firstElementChild.cloneNode(true);
     const bookUrl = resolveBookUrl(book);
     const authorUrl = String(book.authorUrl || '').trim();
+    const isCurrentlyReading = deriveStatus(book) === 'currently-reading';
 
     setCover(node, book, index < 2);
+    node.classList.toggle('is-currently-reading', isCurrentlyReading);
 
     const coverLink = node.querySelector('.book-cover-link');
     if (bookUrl) {
@@ -312,6 +350,13 @@ function renderBooks(filtered) {
     node.querySelector('.your-rating').classList.add(toneClass(book.rating));
     node.querySelector('.community-rating').textContent = `GR: ${formatRating(book.averageRating, '-')}`;
     node.querySelector('.community-rating').classList.add(toneClass(book.averageRating));
+
+    if (isCurrentlyReading) {
+      const readingBadge = document.createElement('span');
+      readingBadge.className = 'status-pill status-pill-reading';
+      readingBadge.textContent = 'Leyendo ahora';
+      node.querySelector('.book-card-topline').appendChild(readingBadge);
+    }
 
     const titleNode = node.querySelector('.book-title');
     if (bookUrl) {
