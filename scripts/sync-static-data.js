@@ -75,16 +75,16 @@ function printValidationReport(validation) {
 function printRepairSummary(repairStats) {
   const restoredDateRead = Number(repairStats?.restoredDateRead || 0);
   const restoredRating = Number(repairStats?.restoredRating || 0);
-  const repairedCurrentlyReading = Number(repairStats?.repairedCurrentlyReading || 0);
+  const preservedCurrentlyReading = Number(repairStats?.preservedCurrentlyReading || 0);
 
-  if (!restoredDateRead && !restoredRating && !repairedCurrentlyReading) {
+  if (!restoredDateRead && !restoredRating && !preservedCurrentlyReading) {
     return;
   }
 
   console.log('\nAuto-repair summary:');
   console.log(`- Restored dateRead: ${restoredDateRead}`);
   console.log(`- Restored rating: ${restoredRating}`);
-  console.log(`- Normalized currently-reading conflicts: ${repairedCurrentlyReading}`);
+  console.log(`- Preserved currently-reading entries: ${preservedCurrentlyReading}`);
 }
 
 function sanitizeBook(book) {

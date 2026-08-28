@@ -1,11 +1,11 @@
 window.__GOODREADS_LIBRARY__ = {
-  "generatedAt": "2026-08-28T13:43:44.528Z",
+  "generatedAt": "2026-08-28T13:51:20.484Z",
   "profile": {
     "displayName": "Mi biblioteca"
   },
   "library": {
     "count": 243,
-    "lastSyncedAt": "2026-08-28T13:43:44.507Z",
+    "lastSyncedAt": "2026-08-28T13:51:20.466Z",
     "books": [
       {
         "bookId": "247336784",
@@ -17,8 +17,10 @@ window.__GOODREADS_LIBRARY__ = {
         "averageRating": 3.86,
         "year": "2024",
         "pages": 384,
-        "bookshelves": [],
-        "exclusiveShelf": "read",
+        "bookshelves": [
+          "currently-reading"
+        ],
+        "exclusiveShelf": "currently-reading",
         "dateRead": "2026-08-25",
         "dateAdded": "2026-08-24",
         "url": "https://www.goodreads.com/book/show/247336784",
@@ -4386,9 +4388,9 @@ window.__GOODREADS_LIBRARY__ = {
       "hasWarnings": true,
       "counts": {
         "warningCount": 78,
-        "infoCount": 8,
+        "infoCount": 9,
         "readMissingDateRead": 78,
-        "currentlyReadingWithDateRead": 0,
+        "currentlyReadingWithDateRead": 1,
         "zeroRatedWithDateRead": 4,
         "dateReadBeforeDateAdded": 4
       },
@@ -4444,11 +4446,20 @@ window.__GOODREADS_LIBRARY__ = {
         },
         {
           "key": "currentlyReadingWithDateRead",
-          "severity": "warning",
+          "severity": "info",
           "title": "currently-reading con dateRead",
-          "help": "Corrige el estado del libro o limpia dateRead para que no haya contradicción.",
-          "count": 0,
-          "samples": []
+          "help": "currently-reading tiene prioridad; dateRead se conserva como histórico mientras el libro siga en curso.",
+          "count": 1,
+          "samples": [
+            {
+              "bookId": "247336784",
+              "title": "Todos los demonios del infierno",
+              "exclusiveShelf": "currently-reading",
+              "dateRead": "2026-08-25",
+              "dateAdded": "2026-08-24",
+              "rating": 0
+            }
+          ]
         },
         {
           "key": "zeroRatedWithDateRead",
@@ -4460,7 +4471,7 @@ window.__GOODREADS_LIBRARY__ = {
             {
               "bookId": "247336784",
               "title": "Todos los demonios del infierno",
-              "exclusiveShelf": "read",
+              "exclusiveShelf": "currently-reading",
               "dateRead": "2026-08-25",
               "dateAdded": "2026-08-24",
               "rating": 0
@@ -4537,7 +4548,7 @@ window.__GOODREADS_LIBRARY__ = {
     "repairStats": {
       "restoredDateRead": 0,
       "restoredRating": 0,
-      "repairedCurrentlyReading": 1
+      "preservedCurrentlyReading": 1
     }
   }
 };

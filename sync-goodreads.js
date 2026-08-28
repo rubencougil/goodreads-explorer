@@ -194,28 +194,23 @@ function mergeCachedEnrichment(book, cachedBook) {
 }
 
 function repairBookStatus(book) {
-  const repaired = {
-    ...book,
-    bookshelves: Array.isArray(book.bookshelves)
-      ? book.bookshelves.filter((shelf) => String(shelf || '').trim() !== 'currently-reading')
-      : book.bookshelves
-  };
-
-  if (
-    String(repaired.exclusiveShelf || '').trim() === 'currently-reading' &&
-    String(repaired.dateRead || '').trim()
-  ) {
-    repaired.exclusiveShelf = 'read';
+  if (String(book.exclusiveShelf || '').trim() === 'currently-reading') {
+    return {
+      ...book,
+      bookshelves: Array.isArray(book.bookshelves)
+        ? book.bookshelves.filter((shelf) => String(shelf || '').trim() !== 'read')
+        : book.bookshelves
+    };
   }
 
-  return repaired;
+  return book;
 }
 
 function repairBooksFromCache(books, cachedBooks) {
   const stats = {
     restoredDateRead: 0,
     restoredRating: 0,
-    repairedCurrentlyReading: 0
+    preservedCurrentlyReading: 0
   };
 
   const repairedBooks = books.map((book) => {
@@ -237,8 +232,8 @@ function repairBooksFromCache(books, cachedBooks) {
       stats.restoredRating += 1;
     }
 
-    if (before.exclusiveShelf === 'currently-reading' && nextBook.exclusiveShelf === 'read') {
-      stats.repairedCurrentlyReading += 1;
+    if (before.exclusiveShelf === 'currently-reading' && nextBook.exclusiveShelf === 'currently-reading') {
+      stats.preservedCurrentlyReading += 1;
     }
 
     return nextBook;
@@ -572,9 +567,9 @@ function validateLibraryBooks(books) {
     },
     {
       key: 'currentlyReadingWithDateRead',
-      severity: 'warning',
+      severity: 'info',
       title: 'currently-reading con dateRead',
-      help: 'Corrige el estado del libro o limpia dateRead para que no haya contradicción.',
+      help: 'currently-reading tiene prioridad; dateRead se conserva como histórico mientras el libro siga en curso.',
       matches: (book) =>
         String(book.exclusiveShelf || '').trim() === 'currently-reading' &&
         Boolean(String(book.dateRead || '').trim())
@@ -798,9 +793,9 @@ async function syncGoodreads(options = {}) {
     const lastSyncedAt = new Date().toISOString();
 
     onProgress(`Parsed ${books.length} books from Goodreads export.`);
-    if (hydrated.stats.restoredDateRead || hydrated.stats.restoredRating || hydrated.stats.repairedCurrentlyReading) {
+    if (hydrated.stats.restoredDateRead || hydrated.stats.restoredRating || hydrated.stats.preservedCurrentlyReading) {
       onProgress(
-        `Repaired ${hydrated.stats.restoredDateRead} fechas de lectura, ${hydrated.stats.restoredRating} ratings y ${hydrated.stats.repairedCurrentlyReading} estados contradictorios desde la caché local.`
+        `Repaired ${hydrated.stats.restoredDateRead} fechas de lectura, ${hydrated.stats.restoredRating} ratings y preservado ${hydrated.stats.preservedCurrentlyReading} estados currently-reading desde la caché local.`
       );
     }
 
