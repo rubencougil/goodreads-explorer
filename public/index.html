@@ -14,6 +14,7 @@
     <meta name="theme-color" content="#f3eee2" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="manifest" href="site.webmanifest" />
+    <link rel="preconnect" href="https://m.media-amazon.com" crossorigin />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="library-page">
@@ -28,96 +29,19 @@
     </header>
 
     <main class="page-shell library-shell">
-      <section class="hero-card">
-        <p class="eyebrow">Biblioteca privada</p>
-        <div class="hero-grid">
-          <div>
-            <h1 id="hero-title">Tu biblioteca de Goodreads, lista para navegar rápido.</h1>
-            <p id="hero-description" class="hero-copy">
-              Cargando tu biblioteca y preparando los filtros...
-            </p>
-          </div>
-          <div class="hero-stats">
-            <div class="metric-tile">
-              <span class="metric-label">Libros</span>
-              <strong id="metric-books">-</strong>
-            </div>
-            <div class="metric-tile">
-              <span class="metric-label">Tu media</span>
-              <strong id="metric-rating">-</strong>
-            </div>
-            <div class="metric-tile">
-              <span class="metric-label">Estanterías</span>
-              <strong id="metric-shelves">-</strong>
-            </div>
-          </div>
+      <section class="explore-header" aria-label="Explorar biblioteca">
+        <div class="explore-header-copy">
+          <p class="eyebrow">Explorar</p>
+          <p id="hero-description" class="hero-copy">
+            Última sincronización: 27 ago 2026. Busca por título, autor o estantería.
+          </p>
         </div>
+        <button id="filters-toggle" class="explore-toggle" type="button" aria-controls="advanced-filters" aria-expanded="false">
+          Mostrar filtros
+        </button>
       </section>
 
       <section class="content-grid">
-        <aside class="panel filter-panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Filtros</p>
-              <h2>Encuentra cualquier libro</h2>
-            </div>
-          </div>
-
-          <label class="field">
-            <span>Búsqueda</span>
-            <input id="search-input" type="search" placeholder="Título, autor o estantería..." />
-          </label>
-
-          <label class="field">
-            <span>Estantería</span>
-            <select id="shelf-filter">
-              <option value="all">Todas</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Estado</span>
-            <select id="status-filter">
-              <option value="all">Cualquiera</option>
-              <option value="read">Leído</option>
-              <option value="currently-reading">Leyendo</option>
-              <option value="to-read">Pendiente</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Nota mínima</span>
-            <select id="rating-filter">
-              <option value="0">Todas</option>
-              <option value="1">1+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-              <option value="4">4+</option>
-              <option value="5">5</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Año de publicación</span>
-            <select id="year-filter">
-              <option value="all">Todos</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Ordenar por</span>
-            <select id="sort-by">
-              <option value="date-read-desc">Fecha leída, más reciente</option>
-              <option value="rating-desc">Tu nota, mayor a menor</option>
-              <option value="average-rating-desc">Nota Goodreads, mayor a menor</option>
-              <option value="title-asc">Título A-Z</option>
-              <option value="author-asc">Autor A-Z</option>
-              <option value="year-desc">Año, más nuevo</option>
-              <option value="date-added-desc">Fecha añadida, más reciente</option>
-            </select>
-          </label>
-        </aside>
-
         <section class="panel results-panel">
           <div class="panel-header">
             <div>
@@ -140,6 +64,74 @@
             <button id="next-page" class="nav-button" type="button">Siguiente</button>
           </div>
         </section>
+
+        <aside class="panel filter-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Filtros</p>
+              <h2>Encuentra cualquier libro</h2>
+            </div>
+          </div>
+
+          <label class="field search-field">
+            <span>Búsqueda</span>
+            <input id="search-input" type="search" placeholder="Título, autor o estantería..." />
+          </label>
+
+          <details class="advanced-filters" id="advanced-filters">
+            <summary>Filtros avanzados</summary>
+            <div class="advanced-filters-body">
+              <label class="field">
+                <span>Estantería</span>
+                <select id="shelf-filter">
+                  <option value="all">Todas</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Estado</span>
+                <select id="status-filter">
+                  <option value="all">Cualquiera</option>
+                  <option value="read">Leído</option>
+                  <option value="currently-reading">Leyendo</option>
+                  <option value="to-read">Pendiente</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Nota mínima</span>
+                <select id="rating-filter">
+                  <option value="0">Todas</option>
+                  <option value="1">1+</option>
+                  <option value="2">2+</option>
+                  <option value="3">3+</option>
+                  <option value="4">4+</option>
+                  <option value="5">5</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Año de publicación</span>
+                <select id="year-filter">
+                  <option value="all">Todos</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Ordenar por</span>
+                <select id="sort-by">
+                  <option value="date-read-desc">Fecha leída, más reciente</option>
+                  <option value="rating-desc">Tu nota, mayor a menor</option>
+                  <option value="average-rating-desc">Nota Goodreads, mayor a menor</option>
+                  <option value="title-asc">Título A-Z</option>
+                  <option value="author-asc">Autor A-Z</option>
+                  <option value="year-desc">Año, más nuevo</option>
+                  <option value="date-added-desc">Fecha añadida, más reciente</option>
+                </select>
+              </label>
+            </div>
+          </details>
+        </aside>
       </section>
     </main>
 

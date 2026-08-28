@@ -8,6 +8,7 @@
     <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <title>Goodreads Browser Estadísticas</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://m.media-amazon.com" crossorigin />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="stats-page">
@@ -35,7 +36,7 @@
         <article class="metric-tile"><span class="metric-label">Páginas totales</span><strong id="stats-pages">-</strong></article>
       </section>
 
-      <section class="stats-grid">
+      <section class="stats-grid stats-grid-primary">
         <article class="panel panel-span-2">
           <div class="panel-header">
             <div>
@@ -46,47 +47,7 @@
           <div id="summary-chips" class="summary-chips"></div>
         </article>
 
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Distribución</p>
-              <h2>Reparto de tus notas</h2>
-            </div>
-          </div>
-          <div id="rating-distribution" class="bar-list"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Estados</p>
-              <h2>Cómo se reparte la biblioteca</h2>
-            </div>
-          </div>
-          <div id="status-distribution" class="bar-list"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Estanterías</p>
-              <h2>Las que más usas</h2>
-            </div>
-          </div>
-          <div id="shelf-distribution" class="bar-list"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Autores</p>
-              <h2>Autores más repetidos</h2>
-            </div>
-          </div>
-          <div id="author-list" class="stack-list"></div>
-        </article>
-
-        <article class="panel">
+        <article class="panel panel-span-2">
           <div class="panel-header">
             <div>
               <p class="eyebrow">Cronología</p>
@@ -99,23 +60,59 @@
         <article class="panel">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">Tamaño</p>
-              <h2>Libros más largos</h2>
+              <p class="eyebrow">Distribución</p>
+              <h2>Reparto de tus notas</h2>
             </div>
           </div>
-          <div id="longest-list" class="stack-list"></div>
+          <div id="rating-distribution" class="bar-list"></div>
         </article>
 
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Contraste</p>
-              <h2>Mayor diferencia contigo</h2>
-            </div>
-          </div>
-          <div id="gap-list" class="stack-list"></div>
-        </article>
       </section>
+
+      <details class="stats-secondary" id="stats-secondary">
+        <summary>Más estadísticas</summary>
+        <div class="stats-grid stats-secondary-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Estanterías</p>
+                <h2>Las que más usas</h2>
+              </div>
+            </div>
+            <div id="shelf-distribution" class="bar-list"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Autores</p>
+                <h2>Autores más repetidos</h2>
+              </div>
+            </div>
+            <div id="author-list" class="stack-list"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Tamaño</p>
+                <h2>Libros más largos</h2>
+              </div>
+            </div>
+            <div id="longest-list" class="stack-list"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Contraste</p>
+                <h2>Mayor diferencia contigo</h2>
+              </div>
+            </div>
+            <div id="gap-list" class="stack-list"></div>
+          </article>
+        </div>
+      </details>
     </main>
 
     <script src="stats.js"></script>

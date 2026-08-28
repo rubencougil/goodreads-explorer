@@ -2,17 +2,18 @@ const DATA_PATH = 'data/library.json';
 const PAGE_SIZE = 24;
 
 const elements = {
-  heroTitle: document.querySelector('#hero-title'),
   heroDescription: document.querySelector('#hero-description'),
   metricBooks: document.querySelector('#metric-books'),
   metricRating: document.querySelector('#metric-rating'),
   metricShelves: document.querySelector('#metric-shelves'),
   searchInput: document.querySelector('#search-input'),
+  filtersToggle: document.querySelector('#filters-toggle'),
   shelfFilter: document.querySelector('#shelf-filter'),
   statusFilter: document.querySelector('#status-filter'),
   ratingFilter: document.querySelector('#rating-filter'),
   yearFilter: document.querySelector('#year-filter'),
   sortBy: document.querySelector('#sort-by'),
+  advancedFilters: document.querySelector('#advanced-filters'),
   resultsTitle: document.querySelector('#results-title'),
   resultsMeta: document.querySelector('#results-meta'),
   results: document.querySelector('#results'),
@@ -26,6 +27,13 @@ const elements = {
 
 let books = [];
 let currentPage = 1;
+const mobileFilterQuery = window.matchMedia('(max-width: 640px)');
+const MOBILE_PAGE_SIZE = 12;
+const DESKTOP_PAGE_SIZE = 24;
+
+function getPageSize() {
+  return mobileFilterQuery.matches ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE;
+}
 
 function normalizeBook(book) {
   return {
@@ -50,6 +58,10 @@ function normalizeBook(book) {
 }
 
 function loadJson() {
+  if (window.__GOODREADS_LIBRARY__) {
+    return Promise.resolve(window.__GOODREADS_LIBRARY__);
+  }
+
   return fetch(DATA_PATH).then((response) => {
     if (!response.ok) {
       throw new Error('No se pudo cargar data/library.json');
@@ -138,6 +150,46 @@ function resolveBookUrl(book) {
   return book.url || book.searchUrl || '';
 }
 
+function renderSkeletonBooks() {
+  if (!elements.results) {
+    return;
+  }
+
+  const pageSize = getPageSize();
+  const fragment = document.createDocumentFragment();
+
+  for (let index = 0; index < pageSize; index += 1) {
+    const item = document.createElement('article');
+    item.className = 'book-card is-skeleton';
+    item.setAttribute('aria-hidden', 'true');
+    item.innerHTML = `
+      <div class="book-cover-link">
+        <div class="book-cover-frame skeleton-cover"></div>
+      </div>
+      <div class="book-card-body">
+        <div class="book-card-topline">
+          <span class="skeleton-pill"></span>
+          <span class="skeleton-pill"></span>
+        </div>
+        <div class="skeleton-line skeleton-title"></div>
+        <div class="skeleton-line skeleton-author"></div>
+        <div class="skeleton-line skeleton-meta"></div>
+        <div class="skeleton-line skeleton-dates"></div>
+        <div class="skeleton-shelves">
+          <span class="skeleton-chip"></span>
+          <span class="skeleton-chip"></span>
+        </div>
+        <div class="skeleton-line skeleton-review"></div>
+      </div>
+    `;
+    fragment.appendChild(item);
+  }
+
+  elements.results.innerHTML = '';
+  elements.results.appendChild(fragment);
+  elements.results.setAttribute('aria-busy', 'true');
+}
+
 function applyFilters() {
   const query = elements.searchInput.value.trim().toLowerCase();
   const shelf = elements.shelfFilter.value;
@@ -195,13 +247,16 @@ function applyFilters() {
   return filtered;
 }
 
-function setCover(node, book) {
+function setCover(node, book, eager = false) {
   const image = node.querySelector('.book-cover');
   const fallback = node.querySelector('.book-cover-fallback');
   const coverUrl = String(book.coverUrl || '').trim();
   const label = book.title ? `Portada de ${book.title}` : 'Portada del libro';
 
   image.alt = label;
+  image.decoding = 'async';
+  image.width = 147;
+  image.height = 219;
 
   if (!coverUrl) {
     image.hidden = true;
@@ -211,6 +266,8 @@ function setCover(node, book) {
 
   image.hidden = false;
   fallback.hidden = true;
+  image.loading = eager ? 'eager' : 'lazy';
+  image.fetchPriority = eager ? 'high' : 'low';
   image.src = coverUrl;
   image.onerror = () => {
     image.hidden = true;
@@ -230,18 +287,19 @@ function renderBooks(filtered) {
 
   elements.emptyState.hidden = true;
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSize = getPageSize();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   currentPage = Math.min(Math.max(1, currentPage), totalPages);
-  const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const pageRecords = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+  const startIndex = (currentPage - 1) * pageSize;
+  const pageRecords = filtered.slice(startIndex, startIndex + pageSize);
   const fragment = document.createDocumentFragment();
 
-  pageRecords.forEach((book) => {
+  pageRecords.forEach((book, index) => {
     const node = elements.template.content.firstElementChild.cloneNode(true);
     const bookUrl = resolveBookUrl(book);
     const authorUrl = String(book.authorUrl || '').trim();
 
-    setCover(node, book);
+    setCover(node, book, index < 2);
 
     const coverLink = node.querySelector('.book-cover-link');
     if (bookUrl) {
@@ -345,8 +403,28 @@ function installEvents() {
   });
 }
 
+function syncAdvancedFiltersVisibility() {
+  if (!elements.advancedFilters) {
+    return;
+  }
+
+  elements.advancedFilters.open = !mobileFilterQuery.matches;
+  syncFiltersToggleLabel();
+}
+
+function syncFiltersToggleLabel() {
+  if (!elements.filtersToggle || !elements.advancedFilters) {
+    return;
+  }
+
+  const expanded = elements.advancedFilters.open;
+  elements.filtersToggle.textContent = expanded ? 'Ocultar filtros' : 'Mostrar filtros';
+  elements.filtersToggle.setAttribute('aria-expanded', String(expanded));
+}
+
 async function init() {
   try {
+    renderSkeletonBooks();
     const payload = await loadJson();
     books = Array.isArray(payload?.library?.books) ? payload.library.books.map(normalizeBook) : [];
 
@@ -362,19 +440,51 @@ async function init() {
     const ratedBooks = books.filter((book) => Number.isFinite(book.rating) && book.rating > 0);
     const averageRating = ratedBooks.reduce((sum, book) => sum + book.rating, 0) / (ratedBooks.length || 1);
 
-    elements.heroTitle.textContent = `Biblioteca de Goodreads de ${displayName}.`;
-    elements.heroDescription.textContent = payload?.library?.lastSyncedAt
-      ? `Última sincronización: ${formatDate(payload.library.lastSyncedAt)}. Busca por título, autor o estantería.`
-      : 'Todavía no hay datos sincronizados. Ejecuta la sincronización manual para poblar la biblioteca.';
-    elements.metricBooks.textContent = String(books.length);
-    elements.metricRating.textContent = ratedBooks.length ? averageRating.toFixed(2) : '-';
-    elements.metricShelves.textContent = String(shelfValues.length);
+    if (elements.heroDescription) {
+      elements.heroDescription.textContent = payload?.library?.lastSyncedAt
+        ? `Última sincronización: ${formatDate(payload.library.lastSyncedAt)}. Busca por título, autor o estantería.`
+        : 'Todavía no hay datos sincronizados. Ejecuta la sincronización manual para poblar la biblioteca.';
+    }
+    if (elements.metricBooks) {
+      elements.metricBooks.textContent = String(books.length);
+    }
+    if (elements.metricRating) {
+      elements.metricRating.textContent = ratedBooks.length ? averageRating.toFixed(2) : '-';
+    }
+    if (elements.metricShelves) {
+      elements.metricShelves.textContent = String(shelfValues.length);
+    }
 
+    syncAdvancedFiltersVisibility();
+    if (elements.filtersToggle && elements.advancedFilters) {
+      elements.filtersToggle.addEventListener('click', () => {
+        elements.advancedFilters.open = !elements.advancedFilters.open;
+        syncFiltersToggleLabel();
+      });
+      elements.advancedFilters.addEventListener('toggle', syncFiltersToggleLabel);
+      syncFiltersToggleLabel();
+    }
+    if (typeof mobileFilterQuery.addEventListener === 'function') {
+      mobileFilterQuery.addEventListener('change', syncAdvancedFiltersVisibility);
+    } else if (typeof mobileFilterQuery.addListener === 'function') {
+      mobileFilterQuery.addListener(syncAdvancedFiltersVisibility);
+    }
     installEvents();
     render();
+    if (elements.results) {
+      elements.results.removeAttribute('aria-busy');
+    }
   } catch (error) {
-    elements.heroDescription.textContent = error.message || 'No se pudo cargar la biblioteca.';
-    elements.resultsMeta.textContent = 'No hay datos disponibles';
+    if (elements.heroDescription) {
+      elements.heroDescription.textContent = error.message || 'No se pudo cargar la biblioteca.';
+    }
+    if (elements.resultsMeta) {
+      elements.resultsMeta.textContent = 'No hay datos disponibles';
+    }
+    if (elements.results) {
+      elements.results.removeAttribute('aria-busy');
+      elements.results.innerHTML = '';
+    }
     elements.emptyState.hidden = false;
     elements.pagination.hidden = true;
   }

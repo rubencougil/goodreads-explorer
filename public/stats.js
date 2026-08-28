@@ -7,15 +7,17 @@ const elements = {
   rated: document.querySelector('#stats-rated'),
   average: document.querySelector('#stats-average'),
   pages: document.querySelector('#stats-pages'),
+  secondary: document.querySelector('#stats-secondary'),
   summaryChips: document.querySelector('#summary-chips'),
   ratingDistribution: document.querySelector('#rating-distribution'),
-  statusDistribution: document.querySelector('#status-distribution'),
   shelfDistribution: document.querySelector('#shelf-distribution'),
   authorList: document.querySelector('#author-list'),
   yearList: document.querySelector('#year-list'),
   longestList: document.querySelector('#longest-list'),
   gapList: document.querySelector('#gap-list')
 };
+
+const mobileQuery = window.matchMedia('(max-width: 640px)');
 
 function groupCount(items, keyFn) {
   const counts = new Map();
@@ -114,19 +116,6 @@ function formatCount(value, noun) {
   return `${value} ${noun}${value === 1 ? '' : 's'}`;
 }
 
-function formatStatusLabel(value) {
-  if (value === 'read') {
-    return 'Leídos';
-  }
-  if (value === 'currently-reading') {
-    return 'Leyendo';
-  }
-  if (value === 'to-read') {
-    return 'Pendientes';
-  }
-  return value || 'Sin estado';
-}
-
 function aggregateAuthors(books) {
   const authors = new Map();
 
@@ -155,14 +144,24 @@ function aggregateAuthors(books) {
     .slice(0, 10);
 }
 
+function syncSecondarySection() {
+  if (!elements.secondary) {
+    return;
+  }
+
+  elements.secondary.open = !mobileQuery.matches;
+}
+
 async function init() {
   try {
-    const response = await fetch(DATA_PATH);
-    if (!response.ok) {
-      throw new Error('No se pudo cargar data/library.json');
-    }
-
-    const payload = await response.json();
+    const payload = window.__GOODREADS_LIBRARY__
+      ? window.__GOODREADS_LIBRARY__
+      : await fetch(DATA_PATH).then((response) => {
+          if (!response.ok) {
+            throw new Error('No se pudo cargar data/library.json');
+          }
+          return response.json();
+        });
     const books = Array.isArray(payload?.library?.books) ? payload.library.books : [];
     const displayName = String(payload?.profile?.displayName || 'Mi Goodreads').trim() || 'Mi Goodreads';
     const ratedBooks = books.filter((book) => Number.isFinite(Number(book.rating)) && Number(book.rating) > 0);
@@ -170,23 +169,31 @@ async function init() {
     const averageRating = ratedBooks.reduce((sum, book) => sum + Number(book.rating), 0) / (ratedBooks.length || 1);
     const totalPages = books.reduce((sum, book) => sum + (Number(book.pages) || 0), 0);
 
-    elements.title.textContent = `Resumen lector de ${displayName}.`;
-    elements.subtitle.textContent = payload?.library?.lastSyncedAt
-      ? `Basado en una exportación local de Goodreads del ${new Date(payload.library.lastSyncedAt).toLocaleDateString('es-ES')}.`
-      : 'Ejecuta la sincronización manual para generar el resumen estático.';
-    elements.books.textContent = String(books.length);
-    elements.rated.textContent = String(ratedBooks.length);
-    elements.average.textContent = ratedBooks.length ? averageRating.toFixed(2) : '-';
-    elements.pages.textContent = totalPages ? totalPages.toLocaleString('es-ES') : '-';
+    if (elements.title) {
+      elements.title.textContent = `Resumen lector de ${displayName}.`;
+    }
+    if (elements.subtitle) {
+      elements.subtitle.textContent = payload?.library?.lastSyncedAt
+        ? `Basado en una exportación local de Goodreads del ${new Date(payload.library.lastSyncedAt).toLocaleDateString('es-ES')}.`
+        : 'Ejecuta la sincronización manual para generar el resumen estático.';
+    }
+    if (elements.books) {
+      elements.books.textContent = String(books.length);
+    }
+    if (elements.rated) {
+      elements.rated.textContent = String(ratedBooks.length);
+    }
+    if (elements.average) {
+      elements.average.textContent = ratedBooks.length ? averageRating.toFixed(2) : '-';
+    }
+    if (elements.pages) {
+      elements.pages.textContent = totalPages ? totalPages.toLocaleString('es-ES') : '-';
+    }
 
     const ratingEntries = [1, 2, 3, 4, 5].map((value) => ({
       label: `${value} estrella${value === 1 ? '' : 's'}`,
       value: ratedBooks.filter((book) => Number(book.rating) === value).length
     }));
-
-    const statusEntries = [...groupCount(books, (book) => String(book.exclusiveShelf || '').trim()).entries()]
-      .map(([label, value]) => ({ label: formatStatusLabel(label), value }))
-      .sort((left, right) => right.value - left.value);
 
     const shelfCounts = [...groupCount(
       books.flatMap((book) => [...new Set([book.exclusiveShelf, ...(Array.isArray(book.bookshelves) ? book.bookshelves : [])].filter(Boolean))]),
@@ -247,7 +254,6 @@ async function init() {
     ].filter(Boolean));
 
     renderBarList(elements.ratingDistribution, ratingEntries);
-    renderBarList(elements.statusDistribution, statusEntries);
     renderBarList(elements.shelfDistribution, shelfCounts);
     renderBarList(elements.yearList, yearCounts);
 
@@ -268,8 +274,19 @@ async function init() {
         String(book.url || '')
       )
     );
+
+    syncSecondarySection();
+    if (typeof mobileQuery.addEventListener === 'function') {
+      mobileQuery.addEventListener('change', syncSecondarySection);
+    } else if (typeof mobileQuery.addListener === 'function') {
+      mobileQuery.addListener(syncSecondarySection);
+    }
+    document.body.classList.remove('is-loading');
   } catch (error) {
-    elements.subtitle.textContent = error.message || 'No se pudieron cargar las estadísticas.';
+    if (elements.subtitle) {
+      elements.subtitle.textContent = error.message || 'No se pudieron cargar las estadísticas.';
+    }
+    document.body.classList.remove('is-loading');
   }
 }
 

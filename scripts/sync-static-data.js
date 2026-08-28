@@ -5,6 +5,7 @@ const { syncGoodreads } = require('../sync-goodreads');
 const ROOT_DIR = path.join(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT_DIR, 'public', 'data');
 const OUTPUT_PATH = path.join(OUTPUT_DIR, 'library.json');
+const OUTPUT_SCRIPT_PATH = path.join(OUTPUT_DIR, 'library.js');
 const PUBLIC_BOOK_FIELDS = [
   'bookId',
   'title',
@@ -27,6 +28,11 @@ const PUBLIC_BOOK_FIELDS = [
 function writeJson(filePath, payload) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+}
+
+function writeScript(filePath, payload) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `window.__GOODREADS_LIBRARY__ = ${JSON.stringify(payload, null, 2)};\n`, 'utf8');
 }
 
 function sanitizeBook(book) {
@@ -58,9 +64,11 @@ async function main() {
   };
 
   writeJson(OUTPUT_PATH, payload);
+  writeScript(OUTPUT_SCRIPT_PATH, payload);
 
   console.log('\nStatic data updated:');
   console.log(`- ${path.relative(ROOT_DIR, OUTPUT_PATH)}`);
+  console.log(`- ${path.relative(ROOT_DIR, OUTPUT_SCRIPT_PATH)}`);
   console.log(`- ${path.relative(ROOT_DIR, result.rawCsvPath)}`);
   console.log(`- Books: ${result.count}`);
 }
