@@ -51,6 +51,23 @@
           <div class="panel-header">
             <div>
               <p class="eyebrow">Cronología</p>
+              <h2>Timeline de lectura</h2>
+            </div>
+          </div>
+          <div class="monthly-pace">
+            <div class="pace-snapshot">
+              <strong id="monthly-pace-value">-</strong>
+              <span>libros/mes</span>
+            </div>
+            <p id="monthly-pace-meta" class="meta-text">Cargando ritmo mensual...</p>
+            <div id="monthly-pace-list" class="monthly-pace-chart"></div>
+          </div>
+        </article>
+
+        <article class="panel panel-span-2">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Cronología</p>
               <h2>Libros leídos por año</h2>
             </div>
           </div>
@@ -68,53 +85,9 @@
         </article>
 
       </section>
-
-      <details class="stats-secondary" id="stats-secondary">
-        <summary>Más estadísticas</summary>
-        <div class="stats-grid stats-secondary-grid">
-          <article class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Estanterías</p>
-                <h2>Las que más usas</h2>
-              </div>
-            </div>
-            <div id="shelf-distribution" class="bar-list"></div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Autores</p>
-                <h2>Autores más repetidos</h2>
-              </div>
-            </div>
-            <div id="author-list" class="stack-list"></div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Tamaño</p>
-                <h2>Libros más largos</h2>
-              </div>
-            </div>
-            <div id="longest-list" class="stack-list"></div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Contraste</p>
-                <h2>Mayor diferencia contigo</h2>
-              </div>
-            </div>
-            <div id="gap-list" class="stack-list"></div>
-          </article>
-        </div>
-      </details>
     </main>
 
+    <script src="data/library.js"></script>
     <script src="stats.js"></script>
   </body>
 </html>

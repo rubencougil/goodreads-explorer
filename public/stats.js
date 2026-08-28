@@ -7,17 +7,15 @@ const elements = {
   rated: document.querySelector('#stats-rated'),
   average: document.querySelector('#stats-average'),
   pages: document.querySelector('#stats-pages'),
-  secondary: document.querySelector('#stats-secondary'),
   summaryChips: document.querySelector('#summary-chips'),
   ratingDistribution: document.querySelector('#rating-distribution'),
   shelfDistribution: document.querySelector('#shelf-distribution'),
-  authorList: document.querySelector('#author-list'),
   yearList: document.querySelector('#year-list'),
-  longestList: document.querySelector('#longest-list'),
+  monthlyPaceValue: document.querySelector('#monthly-pace-value'),
+  monthlyPaceMeta: document.querySelector('#monthly-pace-meta'),
+  monthlyPaceList: document.querySelector('#monthly-pace-list'),
   gapList: document.querySelector('#gap-list')
 };
-
-const mobileQuery = window.matchMedia('(max-width: 640px)');
 
 function groupCount(items, keyFn) {
   const counts = new Map();
@@ -58,6 +56,9 @@ function createStackItem(title, meta, href = '') {
 }
 
 function renderBarList(target, entries) {
+  if (!target) {
+    return;
+  }
   target.innerHTML = '';
   if (!entries.length) {
     target.textContent = 'Todavía no hay datos.';
@@ -70,7 +71,206 @@ function renderBarList(target, entries) {
   });
 }
 
+function renderTimelineChart(target, entries) {
+  if (!target) {
+    return;
+  }
+  target.innerHTML = '';
+  if (!entries.length) {
+    target.textContent = 'Todavía no hay datos.';
+    return;
+  }
+
+  const width = 840;
+  const height = 300;
+  const paddingLeft = 98;
+  const paddingRight = 18;
+  const paddingTop = 28;
+  const paddingBottom = 60;
+  const plotWidth = width - paddingLeft - paddingRight;
+  const plotHeight = height - paddingTop - paddingBottom;
+  const max = Math.max(...entries.map((entry) => entry.value), 1);
+  const step = entries.length > 1 ? plotWidth / (entries.length - 1) : 0;
+  const barWidth = Math.min(48, Math.max(24, plotWidth / Math.max(entries.length, 6) * 0.55));
+  const points = entries.map((entry, index) => {
+    const x = paddingLeft + (step * index);
+    const barHeight = Math.max(12, (entry.value / max) * plotHeight);
+    const y = paddingTop + (plotHeight - barHeight);
+    return {
+      ...entry,
+      x,
+      y,
+      barHeight,
+      index
+    };
+  });
+
+  const areaPath = points.length
+    ? [
+        `M ${points[0].x} ${paddingTop + plotHeight}`,
+        `L ${points[0].x} ${points[0].y}`,
+        ...points.slice(1).map((point) => `L ${point.x} ${point.y}`),
+        `L ${points[points.length - 1].x} ${paddingTop + plotHeight}`,
+        'Z'
+      ].join(' ')
+    : '';
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+    .join(' ');
+
+  const labels = points.map((point) => {
+    const tickY = paddingTop + plotHeight + 22;
+    return `
+      <text x="${point.x}" y="${tickY}" text-anchor="middle" class="timeline-axis-label">${point.label}</text>
+    `;
+  }).join('');
+
+  const tickValues = [max, Math.ceil(max / 2), 0]
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .sort((left, right) => right - left);
+  const tickLabelX = 50;
+  const tickSpacing = tickValues.length > 1 ? plotHeight / (tickValues.length - 1) : 0;
+  const tickMarks = tickValues.map((value, index) => {
+    const y = paddingTop + (tickSpacing * index);
+    return `
+      <line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" class="timeline-grid-line"></line>
+      <text x="${tickLabelX}" y="${y + 4}" text-anchor="end" class="timeline-axis-value">${value}</text>
+    `;
+  }).join('');
+
+  target.innerHTML = `
+    <div class="timeline-chart-shell">
+      <svg class="timeline-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Serie mensual de lecturas">
+        <g class="timeline-grid">
+          ${tickMarks}
+          <line x1="${paddingLeft}" y1="${paddingTop}" x2="${paddingLeft}" y2="${paddingTop + plotHeight}" class="timeline-axis-line"></line>
+        </g>
+        <path class="timeline-area" d="${areaPath}"></path>
+        <path class="timeline-line" d="${linePath}"></path>
+        ${points.map((point) => `
+          <rect class="timeline-hitbox" tabindex="0" x="${point.x - (barWidth / 2)}" y="${paddingTop}" width="${barWidth}" height="${plotHeight}" rx="14" ry="14" data-label="${point.label}" data-value="${point.value}"></rect>
+          <rect class="timeline-bar" x="${point.x - (barWidth / 2)}" y="${point.y}" width="${barWidth}" height="${point.barHeight}" rx="14" ry="14"></rect>
+          <circle class="timeline-point" tabindex="0" cx="${point.x}" cy="${point.y}" r="6" data-label="${point.label}" data-value="${point.value}"></circle>
+        `).join('')}
+        ${labels}
+      </svg>
+      <div class="timeline-tooltip" aria-live="polite" hidden>
+        <strong id="timeline-tooltip-value">${points[points.length - 1].value}</strong>
+        <span id="timeline-tooltip-label">${points[points.length - 1].label}</span>
+      </div>
+    </div>
+  `;
+
+  const svg = target.querySelector('.timeline-chart');
+  const shell = target.querySelector('.timeline-chart-shell');
+  const tooltipValue = target.querySelector('#timeline-tooltip-value');
+  const tooltipLabel = target.querySelector('#timeline-tooltip-label');
+  const hitboxes = [...target.querySelectorAll('.timeline-hitbox, .timeline-point')];
+  const tooltip = target.querySelector('.timeline-tooltip');
+  let activePoint = points[points.length - 1] || null;
+
+  const setActive = (label, value) => {
+    if (tooltipValue) {
+      tooltipValue.textContent = String(value);
+    }
+    if (tooltipLabel) {
+      tooltipLabel.textContent = label;
+    }
+  };
+
+  const positionTooltip = (clientX, clientY) => {
+    if (!shell || !tooltip) {
+      return;
+    }
+
+    const shellRect = shell.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const offset = 14;
+    let left = clientX - shellRect.left + offset;
+    let top = clientY - shellRect.top - tooltipRect.height - offset;
+
+    if (left + tooltipRect.width > shellRect.width - 8) {
+      left = clientX - shellRect.left - tooltipRect.width - offset;
+    }
+    if (top < 8) {
+      top = clientY - shellRect.top + offset;
+    }
+
+    tooltip.style.left = `${Math.max(8, left)}px`;
+    tooltip.style.top = `${Math.max(8, top)}px`;
+  };
+
+  const showTooltip = (node, event) => {
+    if (!tooltip || !node) {
+      return;
+    }
+
+    activePoint = {
+      label: node.dataset.label || '',
+      value: node.dataset.value || ''
+    };
+    setActive(activePoint.label, activePoint.value);
+    tooltip.hidden = false;
+    const rect = node.getBoundingClientRect();
+    const clientX = Number.isFinite(event?.clientX) && event.clientX > 0 ? event.clientX : rect.left + (rect.width / 2);
+    const clientY = Number.isFinite(event?.clientY) && event.clientY > 0 ? event.clientY : rect.top + (rect.height / 2);
+    positionTooltip(clientX, clientY);
+  };
+
+  const moveTooltip = (event) => {
+    if (!tooltip || tooltip.hidden || !activePoint) {
+      return;
+    }
+    positionTooltip(event.clientX, event.clientY);
+  };
+
+  const hideTooltip = () => {
+    if (tooltip) {
+      tooltip.hidden = true;
+    }
+  };
+
+  const resolvePoint = (event) => {
+    const directMatch = event.target?.closest?.('.timeline-hitbox, .timeline-point');
+    if (directMatch) {
+      return directMatch;
+    }
+
+    const targetNode = document.elementFromPoint(event.clientX, event.clientY);
+    const fallbackMatch = targetNode?.closest?.('.timeline-hitbox, .timeline-point');
+    return fallbackMatch || null;
+  };
+
+  const handlePointerMove = (event) => {
+    const pointNode = resolvePoint(event);
+    if (!pointNode) {
+      hideTooltip();
+      return;
+    }
+    if (pointNode.dataset) {
+      showTooltip(pointNode, event);
+    }
+  };
+
+  hitboxes.forEach((node) => {
+    node.addEventListener('mouseenter', (event) => showTooltip(node, event));
+    node.addEventListener('mousemove', moveTooltip);
+    node.addEventListener('focus', (event) => showTooltip(node, event));
+    node.addEventListener('click', (event) => showTooltip(node, event));
+  });
+
+  if (svg) {
+    svg.addEventListener('pointermove', handlePointerMove);
+    svg.addEventListener('mousemove', handlePointerMove);
+    svg.addEventListener('mouseleave', hideTooltip);
+  }
+}
+
 function renderStackList(target, entries, emptyMessage, createItem) {
+  if (!target) {
+    return;
+  }
   target.innerHTML = '';
   if (!entries.length) {
     target.textContent = emptyMessage;
@@ -112,44 +312,39 @@ function toYear(value) {
   return date ? date.getFullYear() : null;
 }
 
-function formatCount(value, noun) {
-  return `${value} ${noun}${value === 1 ? '' : 's'}`;
-}
-
-function aggregateAuthors(books) {
-  const authors = new Map();
-
-  books.forEach((book) => {
-    const label = String(book.author || '').trim();
-    if (!label) {
-      return;
-    }
-
-    const current = authors.get(label) || {
-      label,
-      value: 0,
-      href: ''
-    };
-
-    current.value += 1;
-    if (!current.href) {
-      current.href = String(book.authorUrl || '').trim();
-    }
-
-    authors.set(label, current);
-  });
-
-  return [...authors.values()]
-    .sort((left, right) => right.value - left.value || left.label.localeCompare(right.label, 'es'))
-    .slice(0, 10);
-}
-
-function syncSecondarySection() {
-  if (!elements.secondary) {
-    return;
+function toMonthKey(value) {
+  const date = parseDate(value);
+  if (!date) {
+    return null;
   }
 
-  elements.secondary.open = !mobileQuery.matches;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthLabel(monthKey) {
+  const [year, month] = String(monthKey || '').split('-').map((value) => Number(value));
+  if (!year || !month) {
+    return String(monthKey || '');
+  }
+
+  return new Intl.DateTimeFormat('es-ES', { month: 'short', year: 'numeric' })
+    .format(new Date(year, month - 1, 1))
+    .replace('.', '');
+}
+
+function monthsBetweenInclusive(startKey, endKey) {
+  const [startYear, startMonth] = String(startKey || '').split('-').map((value) => Number(value));
+  const [endYear, endMonth] = String(endKey || '').split('-').map((value) => Number(value));
+
+  if (!startYear || !startMonth || !endYear || !endMonth) {
+    return 0;
+  }
+
+  return ((endYear - startYear) * 12) + (endMonth - startMonth) + 1;
+}
+
+function formatCount(value, noun) {
+  return `${value} ${noun}${value === 1 ? '' : 's'}`;
 }
 
 async function init() {
@@ -203,8 +398,6 @@ async function init() {
       .sort((left, right) => right.value - left.value)
       .slice(0, 8);
 
-    const authorCounts = aggregateAuthors(books);
-
     const yearCounts = [...groupCount(
       books.filter((book) => toYear(book.dateRead)),
       (book) => String(toYear(book.dateRead) || '')
@@ -213,10 +406,30 @@ async function init() {
       .sort((left, right) => Number(right.label) - Number(left.label))
       .slice(0, 12);
 
-    const longestBooks = books
-      .filter((book) => Number(book.pages) > 0)
-      .sort((left, right) => Number(right.pages) - Number(left.pages))
-      .slice(0, 10);
+    const monthCountsMap = groupCount(
+      books.filter((book) => toMonthKey(book.dateRead)),
+      (book) => toMonthKey(book.dateRead)
+    );
+    const monthCounts = [...monthCountsMap.entries()]
+      .sort((left, right) => left[0].localeCompare(right[0]))
+      .slice(-12)
+      .map(([label, value]) => ({ label: monthLabel(label), value }))
+      ;
+    const totalReadMonths = [...monthCountsMap.values()].reduce((sum, value) => sum + value, 0);
+    const readMonthKeys = [...monthCountsMap.keys()].sort();
+    const firstReadMonth = readMonthKeys[0] || null;
+    const lastReadMonth = readMonthKeys[readMonthKeys.length - 1] || null;
+    const monthSpan = monthsBetweenInclusive(firstReadMonth, lastReadMonth);
+    const averageMonthlyReads = monthSpan > 0 ? totalReadMonths / monthSpan : 0;
+
+    if (elements.monthlyPaceValue) {
+      elements.monthlyPaceValue.textContent = monthSpan > 0 ? averageMonthlyReads.toFixed(1) : '-';
+    }
+    if (elements.monthlyPaceMeta) {
+      elements.monthlyPaceMeta.textContent = monthSpan > 0
+        ? `Basado en ${totalReadMonths} lecturas repartidas en ${monthSpan} meses, desde ${monthLabel(firstReadMonth)} hasta ${monthLabel(lastReadMonth)}.`
+        : 'Todavía no hay fechas de lectura suficientes para calcular un ritmo medio.';
+    }
 
     const biggestGaps = books
       .filter((book) => Number.isFinite(Number(book.rating)) && Number(book.rating) > 0 && Number.isFinite(Number(book.averageRating)) && Number(book.averageRating) > 0)
@@ -237,9 +450,7 @@ async function init() {
       }
       return best;
     }, null);
-    const longestBook = longestBooks[0] || null;
     const topShelf = shelfCounts[0] || null;
-    const topAuthor = authorCounts[0] || null;
     const averagePages = pageBooks.length
       ? `${Math.round(pageBooks.reduce((sum, book) => sum + Number(book.pages), 0) / pageBooks.length).toLocaleString('es-ES')} p.`
       : '-';
@@ -248,25 +459,14 @@ async function init() {
       currentlyReading ? { label: 'Leyendo ahora', value: formatCount(currentlyReading, 'libro') } : null,
       bestYearEntry ? { label: 'Año más lector', value: `${bestYearEntry.label} · ${bestYearEntry.value}` } : null,
       topShelf ? { label: 'Estantería principal', value: `${topShelf.label} · ${topShelf.value}` } : null,
-      topAuthor ? { label: 'Autor más repetido', value: `${topAuthor.label} · ${topAuthor.value}` } : null,
-      averagePages !== '-' ? { label: 'Longitud media', value: averagePages } : null,
-      longestBook ? { label: 'Libro más largo', value: `${Number(longestBook.pages).toLocaleString('es-ES')} p.` } : null
+      averagePages !== '-' ? { label: 'Longitud media', value: averagePages } : null
     ].filter(Boolean));
 
     renderBarList(elements.ratingDistribution, ratingEntries);
     renderBarList(elements.shelfDistribution, shelfCounts);
     renderBarList(elements.yearList, yearCounts);
+    renderTimelineChart(elements.monthlyPaceList, monthCounts);
 
-    renderStackList(elements.authorList, authorCounts, 'Todavía no hay datos de autores.', (entry) =>
-      createStackItem(entry.label, formatCount(entry.value, 'libro'), entry.href)
-    );
-    renderStackList(elements.longestList, longestBooks, 'Todavía no hay datos de páginas.', (book) =>
-      createStackItem(
-        book.title,
-        `${Number(book.pages).toLocaleString('es-ES')} páginas`,
-        String(book.url || '')
-      )
-    );
     renderStackList(elements.gapList, biggestGaps, 'Todavía no hay suficientes notas para comparar.', (book) =>
       createStackItem(
         book.title,
@@ -275,12 +475,6 @@ async function init() {
       )
     );
 
-    syncSecondarySection();
-    if (typeof mobileQuery.addEventListener === 'function') {
-      mobileQuery.addEventListener('change', syncSecondarySection);
-    } else if (typeof mobileQuery.addListener === 'function') {
-      mobileQuery.addListener(syncSecondarySection);
-    }
     document.body.classList.remove('is-loading');
   } catch (error) {
     if (elements.subtitle) {
