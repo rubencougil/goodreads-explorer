@@ -1,11 +1,11 @@
 window.__GOODREADS_LIBRARY__ = {
-  "generatedAt": "2026-08-28T13:51:20.484Z",
+  "generatedAt": "2026-09-21T08:08:00.569Z",
   "profile": {
     "displayName": "Mi biblioteca"
   },
   "library": {
     "count": 243,
-    "lastSyncedAt": "2026-08-28T13:51:20.466Z",
+    "lastSyncedAt": "2026-09-21T08:07:30.557Z",
     "books": [
       {
         "bookId": "247336784",
