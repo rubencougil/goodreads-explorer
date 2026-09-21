@@ -37,8 +37,11 @@ npm run sync:static
 
 Notes:
 
-- The sync runs headless by default and reuses the persistent session from `.playwright/goodreads-profile`.
-- If Goodreads asks you to sign in again, run `GOODREADS_HEADLESS=false npm run sync:static` once to complete the login in a visible browser.
+- The sync opens a visible Chromium window by default and reuses the persistent session from `.playwright/goodreads-profile`.
+- To run without a visible browser, set `GOODREADS_HEADLESS=true`. CI always runs headless.
+- If Goodreads asks you to sign in again, complete the login in the opened browser window; the sync will continue automatically.
+- If Goodreads blocks the browser, times out, or does not expose a fresh export, the sync exits without changing the generated library files. This prevents an old CSV from being published with a new sync timestamp.
+- To intentionally rebuild from the newest local CSV, run `GOODREADS_ALLOW_STALE_FALLBACK=true npm run sync:static`. This recovery mode keeps `lastSyncedAt` set to the CSV file's actual modification time.
 - The generated static data is written to `public/data/library.json`.
 - Raw CSV exports are kept in `data/`.
 - `publicDisplayName` is optional but recommended if you want the published site to avoid showing your real name.

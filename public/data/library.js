@@ -1,26 +1,82 @@
 window.__GOODREADS_LIBRARY__ = {
-  "generatedAt": "2026-09-21T08:08:00.569Z",
+  "generatedAt": "2026-09-21T08:26:31.821Z",
   "profile": {
     "displayName": "Mi biblioteca"
   },
   "library": {
-    "count": 243,
-    "lastSyncedAt": "2026-09-21T08:07:30.557Z",
+    "count": 246,
+    "lastSyncedAt": "2026-09-21T08:26:31.719Z",
     "books": [
+      {
+        "bookId": "57310370",
+        "title": "Yo que nunca supe de los hombres",
+        "sortTitle": "yo que nunca supe de los hombres",
+        "author": "Jacqueline Harpman",
+        "authorUrl": "https://www.goodreads.com/author/show/7620.Jacqueline_Harpman?from_search=true&from_srp=true",
+        "rating": 0,
+        "averageRating": 4.03,
+        "year": "1995",
+        "pages": 192,
+        "bookshelves": [
+          "currently-reading"
+        ],
+        "exclusiveShelf": "currently-reading",
+        "dateRead": "",
+        "dateAdded": "2026-09-16",
+        "url": "https://www.goodreads.com/book/show/57310370",
+        "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1614890163i/57310370._SY318_.jpg",
+        "searchUrl": "https://www.goodreads.com/search?q=Yo%20que%20nunca%20supe%20de%20los%20hombres%20Jacqueline%20Harpman&search_type=books"
+      },
+      {
+        "bookId": "42430625",
+        "title": "El silencio de los justos (Spanish Edition)",
+        "sortTitle": "el silencio de los justos (spanish edition)",
+        "author": "Fernando Garcia Lobo",
+        "authorUrl": "https://www.goodreads.com/author/show/15024583.Fernando_Garcia_Lobo?from_search=true&from_srp=true",
+        "rating": 0,
+        "averageRating": 3.75,
+        "year": "2018",
+        "pages": 290,
+        "bookshelves": [
+          "currently-reading"
+        ],
+        "exclusiveShelf": "currently-reading",
+        "dateRead": "",
+        "dateAdded": "2026-09-15",
+        "url": "https://www.goodreads.com/book/show/42430625",
+        "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1540399259i/42430625._SX318_.jpg",
+        "searchUrl": "https://www.goodreads.com/search?q=El%20silencio%20de%20los%20justos%20(Spanish%20Edition)%20Fernando%20Garcia%20Lobo&search_type=books"
+      },
+      {
+        "bookId": "61417429",
+        "title": "The Vessel",
+        "sortTitle": "the vessel",
+        "author": "Adam L.G. Nevill",
+        "authorUrl": "https://www.goodreads.com/author/show/3381686.Adam_L_G_Nevill?from_search=true&from_srp=true",
+        "rating": 4,
+        "averageRating": 3.7,
+        "year": "2022",
+        "pages": 162,
+        "bookshelves": [],
+        "exclusiveShelf": "read",
+        "dateRead": "",
+        "dateAdded": "2026-09-15",
+        "url": "https://www.goodreads.com/book/show/61417429",
+        "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1657425087i/61417429._SY318_.jpg",
+        "searchUrl": "https://www.goodreads.com/search?q=The%20Vessel%20Adam%20L.G.%20Nevill&search_type=books"
+      },
       {
         "bookId": "247336784",
         "title": "Todos los demonios del infierno",
         "sortTitle": "todos los demonios del infierno",
         "author": "Adam L.G. Nevill",
         "authorUrl": "https://www.goodreads.com/author/show/3381686.Adam_L_G_Nevill?from_search=true&from_srp=true",
-        "rating": 0,
+        "rating": 3,
         "averageRating": 3.86,
         "year": "2024",
         "pages": 384,
-        "bookshelves": [
-          "currently-reading"
-        ],
-        "exclusiveShelf": "currently-reading",
+        "bookshelves": [],
+        "exclusiveShelf": "read",
         "dateRead": "2026-08-25",
         "dateAdded": "2026-08-24",
         "url": "https://www.goodreads.com/book/show/247336784",
@@ -2621,8 +2677,8 @@ window.__GOODREADS_LIBRARY__ = {
       },
       {
         "bookId": "44492286",
-        "title": "Children of Dune (Dune #3)",
-        "sortTitle": "children of dune (dune #3)",
+        "title": "Children of Dune (Dune, #3)",
+        "sortTitle": "children of dune (dune, #3)",
         "author": "Frank Herbert",
         "authorUrl": "https://www.goodreads.com/author/show/58.Frank_Herbert?from_search=true&from_srp=true",
         "rating": 2,
@@ -2635,7 +2691,7 @@ window.__GOODREADS_LIBRARY__ = {
         "dateAdded": "2022-02-27",
         "url": "https://www.goodreads.com/book/show/44492286",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1564783201i/44492286._SY318_.jpg",
-        "searchUrl": "https://www.goodreads.com/search?q=Children%20of%20Dune%20(Dune%20%233)%20Frank%20Herbert&search_type=books"
+        "searchUrl": "https://www.goodreads.com/search?q=Children%20of%20Dune%20(Dune%2C%20%233)%20Frank%20Herbert&search_type=books"
       },
       {
         "bookId": "53745",
@@ -4387,11 +4443,11 @@ window.__GOODREADS_LIBRARY__ = {
     "validation": {
       "hasWarnings": true,
       "counts": {
-        "warningCount": 78,
-        "infoCount": 9,
-        "readMissingDateRead": 78,
-        "currentlyReadingWithDateRead": 1,
-        "zeroRatedWithDateRead": 4,
+        "warningCount": 79,
+        "infoCount": 7,
+        "readMissingDateRead": 79,
+        "currentlyReadingWithDateRead": 0,
+        "zeroRatedWithDateRead": 3,
         "dateReadBeforeDateAdded": 4
       },
       "categories": [
@@ -4400,8 +4456,16 @@ window.__GOODREADS_LIBRARY__ = {
           "severity": "warning",
           "title": "Libros en read sin dateRead",
           "help": "Usa dateAdded como respaldo para ordenar y, si puedes, intenta recuperar la fecha de lectura en el sync.",
-          "count": 78,
+          "count": 79,
           "samples": [
+            {
+              "bookId": "61417429",
+              "title": "The Vessel",
+              "exclusiveShelf": "read",
+              "dateRead": "",
+              "dateAdded": "2026-09-15",
+              "rating": 4
+            },
             {
               "bookId": "17415342",
               "title": "El fin de los días",
@@ -4433,14 +4497,6 @@ window.__GOODREADS_LIBRARY__ = {
               "dateRead": "",
               "dateAdded": "2025-01-17",
               "rating": 5
-            },
-            {
-              "bookId": "7114018",
-              "title": "A esmorga",
-              "exclusiveShelf": "read",
-              "dateRead": "",
-              "dateAdded": "2021-02-15",
-              "rating": 5
             }
           ]
         },
@@ -4449,33 +4505,16 @@ window.__GOODREADS_LIBRARY__ = {
           "severity": "info",
           "title": "currently-reading con dateRead",
           "help": "currently-reading tiene prioridad; dateRead se conserva como histórico mientras el libro siga en curso.",
-          "count": 1,
-          "samples": [
-            {
-              "bookId": "247336784",
-              "title": "Todos los demonios del infierno",
-              "exclusiveShelf": "currently-reading",
-              "dateRead": "2026-08-25",
-              "dateAdded": "2026-08-24",
-              "rating": 0
-            }
-          ]
+          "count": 0,
+          "samples": []
         },
         {
           "key": "zeroRatedWithDateRead",
           "severity": "info",
           "title": "rating 0 con fecha de lectura",
           "help": "Si Goodreads tenía nota, reintenta importar solo el rating de estos libros.",
-          "count": 4,
+          "count": 3,
           "samples": [
-            {
-              "bookId": "247336784",
-              "title": "Todos los demonios del infierno",
-              "exclusiveShelf": "currently-reading",
-              "dateRead": "2026-08-25",
-              "dateAdded": "2026-08-24",
-              "rating": 0
-            },
             {
               "bookId": "60992641",
               "title": "Crims. Tot el que llegireu és real",
@@ -4548,7 +4587,7 @@ window.__GOODREADS_LIBRARY__ = {
     "repairStats": {
       "restoredDateRead": 0,
       "restoredRating": 0,
-      "preservedCurrentlyReading": 1
+      "preservedCurrentlyReading": 2
     }
   }
 };

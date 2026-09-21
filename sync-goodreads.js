@@ -14,6 +14,10 @@ const EXPORT_WAIT_MS = 4 * 60 * 1000;
 const ENRICH_CONCURRENCY = 6;
 const OUTPUT_PATH = path.join(ROOT_DIR, 'public', 'data', 'library.json');
 
+function isTruthyEnv(value) {
+  return ['true', '1', 'yes'].includes(String(value || '').trim().toLowerCase());
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -658,7 +662,7 @@ async function waitUntilLoggedIn(page, onProgress, isHeadless) {
 
   if (await signInForm.first().isVisible().catch(() => false)) {
     if (isHeadless) {
-      onProgress?.('Goodreads needs a fresh login and headless mode cannot complete it. Reusing the latest CSV export if available.');
+      onProgress?.('Goodreads needs a fresh login and headless mode cannot complete it.');
       return false;
     }
 
@@ -692,7 +696,7 @@ async function waitUntilLoggedIn(page, onProgress, isHeadless) {
   }
 
   if (isHeadless) {
-    onProgress?.('Goodreads export control did not appear in time. Reusing the latest CSV export if available.');
+    onProgress?.('Goodreads export control did not appear in time.');
     return false;
   }
 
@@ -741,9 +745,9 @@ async function triggerExportDownload(page, onProgress) {
 async function syncGoodreads(options = {}) {
   const config = normalizeConfig(options.config || {});
   const headlessEnv = String(process.env.GOODREADS_HEADLESS || '').trim().toLowerCase();
+  const allowStaleFallback = isTruthyEnv(process.env.GOODREADS_ALLOW_STALE_FALLBACK);
   const isHeadless =
     process.env.CI === 'true' ||
-    headlessEnv === '' ||
     headlessEnv === 'true' ||
     headlessEnv === '1' ||
     headlessEnv === 'yes';
@@ -766,11 +770,34 @@ async function syncGoodreads(options = {}) {
 
   try {
     onProgress('Opening Goodreads import/export page...');
-    await page.goto(IMPORT_EXPORT_URL, {
-      waitUntil: 'domcontentloaded',
-      timeout: 60_000
-    });
-    const readyForExport = await waitUntilLoggedIn(page, onProgress, isHeadless);
+    let readyForExport = false;
+    let exportFailure = null;
+
+    try {
+      const response = await page.goto(IMPORT_EXPORT_URL, {
+        waitUntil: 'domcontentloaded',
+        timeout: 60_000
+      });
+
+      if (!response) {
+        throw new Error('Goodreads returned no navigation response.');
+      }
+
+      if (!response.ok()) {
+        throw new Error(`Goodreads returned HTTP ${response.status()} for the import/export page.`);
+      }
+
+      readyForExport = await waitUntilLoggedIn(page, onProgress, isHeadless);
+      if (!readyForExport) {
+        throw new Error(
+          isHeadless
+            ? 'Goodreads requires a fresh login or did not expose the export controls in headless mode.'
+            : 'Goodreads did not expose the export controls.'
+        );
+      }
+    } catch (error) {
+      exportFailure = error;
+    }
 
     let csvPath = '';
     if (readyForExport) {
@@ -779,18 +806,33 @@ async function syncGoodreads(options = {}) {
       csvPath = path.join(DEFAULT_DOWNLOAD_DIR, `goodreads-library-${timestamp}.csv`);
       await download.saveAs(csvPath);
     } else {
+      const reason = exportFailure?.message || 'Goodreads export was not available.';
+
+      if (!allowStaleFallback) {
+        throw new Error(
+          `${reason}\n` +
+          'No files were updated. Retry with GOODREADS_HEADLESS=false to sign in or pass the Goodreads check. ' +
+          'To intentionally rebuild from the latest local CSV, set GOODREADS_ALLOW_STALE_FALLBACK=true.'
+        );
+      }
+
       csvPath = findLatestExportCsv();
       if (!csvPath) {
         throw new Error('No local Goodreads CSV export is available to reuse.');
       }
-      onProgress?.(`Reusing existing CSV export at ${path.relative(ROOT_DIR, csvPath)}.`);
+      onProgress?.(
+        `WARNING: ${reason} Reusing stale CSV export at ${path.relative(ROOT_DIR, csvPath)} because ` +
+        'GOODREADS_ALLOW_STALE_FALLBACK=true.'
+      );
     }
 
     const csvText = fs.readFileSync(csvPath, 'utf8');
     const books = parseLibraryCsv(csvText);
     const cachedBooks = readCachedLibraryBooks();
     const hydrated = repairBooksFromCache(books, cachedBooks);
-    const lastSyncedAt = new Date().toISOString();
+    const lastSyncedAt = readyForExport
+      ? new Date().toISOString()
+      : fs.statSync(csvPath).mtime.toISOString();
 
     onProgress(`Parsed ${books.length} books from Goodreads export.`);
     if (hydrated.stats.restoredDateRead || hydrated.stats.restoredRating || hydrated.stats.preservedCurrentlyReading) {
