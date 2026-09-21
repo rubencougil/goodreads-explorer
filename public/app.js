@@ -152,11 +152,22 @@ function readingOrderScore(book) {
     return readScore;
   }
 
-  if (deriveStatus(book) === 'read') {
+  if (deriveStatus(book) === 'read' || deriveStatus(book) === 'currently-reading') {
     return dateScore(book.dateAdded);
   }
 
   return 0;
+}
+
+function compareReadingOrder(left, right) {
+  const leftIsCurrentlyReading = deriveStatus(left) === 'currently-reading';
+  const rightIsCurrentlyReading = deriveStatus(right) === 'currently-reading';
+
+  if (leftIsCurrentlyReading !== rightIsCurrentlyReading) {
+    return rightIsCurrentlyReading - leftIsCurrentlyReading;
+  }
+
+  return readingOrderScore(right) - readingOrderScore(left) || compareValues(left.title, right.title);
 }
 
 function resolveBookUrl(book) {
@@ -285,7 +296,7 @@ function applyFilters() {
         return dateScore(right.dateAdded) - dateScore(left.dateAdded) || compareValues(left.title, right.title);
       case 'date-read-desc':
       default:
-        return readingOrderScore(right) - readingOrderScore(left) || compareValues(left.title, right.title);
+        return compareReadingOrder(left, right);
     }
   });
 
