@@ -1,27 +1,81 @@
 window.__GOODREADS_LIBRARY__ = {
-  "generatedAt": "2026-09-21T08:26:31.821Z",
+  "generatedAt": "2026-10-19T13:38:18.506Z",
   "profile": {
     "displayName": "Mi biblioteca"
   },
   "library": {
-    "count": 246,
-    "lastSyncedAt": "2026-09-21T08:26:31.719Z",
+    "count": 248,
+    "lastSyncedAt": "2026-10-19T13:38:16.881Z",
     "books": [
+      {
+        "bookId": "213395480",
+        "title": "Victorian Psycho",
+        "sortTitle": "victorian psycho",
+        "author": "Virginia Feito",
+        "authorUrl": "",
+        "rating": 4.5,
+        "averageRating": 0,
+        "year": "2025",
+        "pages": 208,
+        "bookshelves": [],
+        "exclusiveShelf": "read",
+        "dateRead": "2026-10-18",
+        "dateAdded": "2026-10-16",
+        "url": "https://www.goodreads.com/book/show/213395480",
+        "coverUrl": "",
+        "searchUrl": "https://www.goodreads.com/search?q=Victorian%20Psycho%20Virginia%20Feito&search_type=books"
+      },
+      {
+        "bookId": "17245",
+        "title": "Dracula",
+        "sortTitle": "dracula",
+        "author": "Bram Stoker",
+        "authorUrl": "",
+        "rating": 0,
+        "averageRating": 0,
+        "year": "1897",
+        "pages": 488,
+        "bookshelves": [
+          "currently-reading"
+        ],
+        "exclusiveShelf": "currently-reading",
+        "dateRead": "",
+        "dateAdded": "2026-10-16",
+        "url": "https://www.goodreads.com/book/show/17245",
+        "coverUrl": "",
+        "searchUrl": "https://www.goodreads.com/search?q=Dracula%20Bram%20Stoker&search_type=books"
+      },
+      {
+        "bookId": "249334199",
+        "title": "The Witch",
+        "sortTitle": "the witch",
+        "author": "Freida McFadden",
+        "authorUrl": "",
+        "rating": 1,
+        "averageRating": 0,
+        "year": "2026",
+        "pages": 352,
+        "bookshelves": [],
+        "exclusiveShelf": "read",
+        "dateRead": "",
+        "dateAdded": "2026-10-15",
+        "url": "https://www.goodreads.com/book/show/249334199",
+        "coverUrl": "",
+        "searchUrl": "https://www.goodreads.com/search?q=The%20Witch%20Freida%20McFadden&search_type=books"
+      },
       {
         "bookId": "57310370",
         "title": "Yo que nunca supe de los hombres",
         "sortTitle": "yo que nunca supe de los hombres",
         "author": "Jacqueline Harpman",
         "authorUrl": "https://www.goodreads.com/author/show/7620.Jacqueline_Harpman?from_search=true&from_srp=true",
-        "rating": 0,
+        "rating": 4.5,
         "averageRating": 4.03,
         "year": "1995",
         "pages": 192,
-        "bookshelves": [
-          "currently-reading"
-        ],
-        "exclusiveShelf": "currently-reading",
-        "dateRead": "",
+        "bookshelves": [],
+        "exclusiveShelf": "read",
+        "dateRead": "2026-10-15",
         "dateAdded": "2026-09-16",
         "url": "https://www.goodreads.com/book/show/57310370",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1614890163i/57310370._SY318_.jpg",
@@ -33,37 +87,17 @@ window.__GOODREADS_LIBRARY__ = {
         "sortTitle": "el silencio de los justos (spanish edition)",
         "author": "Fernando Garcia Lobo",
         "authorUrl": "https://www.goodreads.com/author/show/15024583.Fernando_Garcia_Lobo?from_search=true&from_srp=true",
-        "rating": 0,
+        "rating": 5,
         "averageRating": 3.75,
         "year": "2018",
         "pages": 290,
-        "bookshelves": [
-          "currently-reading"
-        ],
-        "exclusiveShelf": "currently-reading",
-        "dateRead": "",
+        "bookshelves": [],
+        "exclusiveShelf": "read",
+        "dateRead": "2026-10-01",
         "dateAdded": "2026-09-15",
         "url": "https://www.goodreads.com/book/show/42430625",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1540399259i/42430625._SX318_.jpg",
         "searchUrl": "https://www.goodreads.com/search?q=El%20silencio%20de%20los%20justos%20(Spanish%20Edition)%20Fernando%20Garcia%20Lobo&search_type=books"
-      },
-      {
-        "bookId": "61417429",
-        "title": "The Vessel",
-        "sortTitle": "the vessel",
-        "author": "Adam L.G. Nevill",
-        "authorUrl": "https://www.goodreads.com/author/show/3381686.Adam_L_G_Nevill?from_search=true&from_srp=true",
-        "rating": 4,
-        "averageRating": 3.7,
-        "year": "2022",
-        "pages": 162,
-        "bookshelves": [],
-        "exclusiveShelf": "read",
-        "dateRead": "",
-        "dateAdded": "2026-09-15",
-        "url": "https://www.goodreads.com/book/show/61417429",
-        "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1657425087i/61417429._SY318_.jpg",
-        "searchUrl": "https://www.goodreads.com/search?q=The%20Vessel%20Adam%20L.G.%20Nevill&search_type=books"
       },
       {
         "bookId": "247336784",
@@ -1291,8 +1325,8 @@ window.__GOODREADS_LIBRARY__ = {
       },
       {
         "bookId": "64998366",
-        "title": "La guerra",
-        "sortTitle": "la guerra",
+        "title": "La guerra (Blackwater, #4)",
+        "sortTitle": "la guerra (blackwater, #4)",
         "author": "Michael McDowell",
         "authorUrl": "https://www.goodreads.com/author/show/90037.Michael_McDowell?from_search=true&from_srp=true",
         "rating": 4,
@@ -1305,7 +1339,7 @@ window.__GOODREADS_LIBRARY__ = {
         "dateAdded": "2024-04-01",
         "url": "https://www.goodreads.com/book/show/64998366",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1776261899i/64998366._SY318_.jpg",
-        "searchUrl": "https://www.goodreads.com/search?q=La%20guerra%20Michael%20McDowell&search_type=books"
+        "searchUrl": "https://www.goodreads.com/search?q=La%20guerra%20(Blackwater%2C%20%234)%20Michael%20McDowell&search_type=books"
       },
       {
         "bookId": "463051",
@@ -2193,7 +2227,7 @@ window.__GOODREADS_LIBRARY__ = {
         "bookId": "23766033",
         "title": "The Road Beneath My Feet",
         "sortTitle": "the road beneath my feet",
-        "author": "Frank Turner",
+        "author": "Frank  Turner",
         "authorUrl": "https://www.goodreads.com/author/show/271887.Frank_Turner?from_search=true&from_srp=true",
         "rating": 3,
         "averageRating": 4.21,
@@ -2205,7 +2239,7 @@ window.__GOODREADS_LIBRARY__ = {
         "dateAdded": "2022-10-03",
         "url": "https://www.goodreads.com/book/show/23766033",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1429998328i/23766033._SY318_.jpg",
-        "searchUrl": "https://www.goodreads.com/search?q=The%20Road%20Beneath%20My%20Feet%20Frank%20Turner&search_type=books"
+        "searchUrl": "https://www.goodreads.com/search?q=The%20Road%20Beneath%20My%20Feet%20Frank%20%20Turner&search_type=books"
       },
       {
         "bookId": "53968530",
@@ -3201,7 +3235,7 @@ window.__GOODREADS_LIBRARY__ = {
         "bookId": "55539565",
         "title": "Think Again: The Power of Knowing What You Don't Know",
         "sortTitle": "think again: the power of knowing what you don't know",
-        "author": "Adam M. Grant",
+        "author": "Adam  Grant",
         "authorUrl": "https://www.goodreads.com/author/show/6583155.Adam_M_Grant?from_search=true&from_srp=true",
         "rating": 2,
         "averageRating": 4.12,
@@ -3213,7 +3247,7 @@ window.__GOODREADS_LIBRARY__ = {
         "dateAdded": "2021-02-28",
         "url": "https://www.goodreads.com/book/show/55539565",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1602574232i/55539565._SY318_.jpg",
-        "searchUrl": "https://www.goodreads.com/search?q=Think%20Again%3A%20The%20Power%20of%20Knowing%20What%20You%20Don't%20Know%20Adam%20M.%20Grant&search_type=books"
+        "searchUrl": "https://www.goodreads.com/search?q=Think%20Again%3A%20The%20Power%20of%20Knowing%20What%20You%20Don't%20Know%20Adam%20%20Grant&search_type=books"
       },
       {
         "bookId": "18068486",
@@ -4063,8 +4097,8 @@ window.__GOODREADS_LIBRARY__ = {
       },
       {
         "bookId": "7502166",
-        "title": "El tiempo entre costuras",
-        "sortTitle": "el tiempo entre costuras",
+        "title": "El tiempo entre costuras (Sira Quiroga, #1)",
+        "sortTitle": "el tiempo entre costuras (sira quiroga, #1)",
         "author": "María Dueñas",
         "authorUrl": "https://www.goodreads.com/author/show/3295744.Mar_a_Due_as?from_search=true&from_srp=true",
         "rating": 4,
@@ -4077,7 +4111,7 @@ window.__GOODREADS_LIBRARY__ = {
         "dateAdded": "2021-02-15",
         "url": "https://www.goodreads.com/book/show/7502166",
         "coverUrl": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1457769306i/7502166._SY318_.jpg",
-        "searchUrl": "https://www.goodreads.com/search?q=El%20tiempo%20entre%20costuras%20Mar%C3%ADa%20Due%C3%B1as&search_type=books"
+        "searchUrl": "https://www.goodreads.com/search?q=El%20tiempo%20entre%20costuras%20(Sira%20Quiroga%2C%20%231)%20Mar%C3%ADa%20Due%C3%B1as&search_type=books"
       },
       {
         "bookId": "8364839",
@@ -4304,7 +4338,7 @@ window.__GOODREADS_LIBRARY__ = {
         "rating": 4,
         "averageRating": 3.59,
         "year": "2017",
-        "pages": 260,
+        "pages": 259,
         "bookshelves": [],
         "exclusiveShelf": "read",
         "dateRead": "",
@@ -4459,12 +4493,12 @@ window.__GOODREADS_LIBRARY__ = {
           "count": 79,
           "samples": [
             {
-              "bookId": "61417429",
-              "title": "The Vessel",
+              "bookId": "249334199",
+              "title": "The Witch",
               "exclusiveShelf": "read",
               "dateRead": "",
-              "dateAdded": "2026-09-15",
-              "rating": 4
+              "dateAdded": "2026-10-15",
+              "rating": 1
             },
             {
               "bookId": "17415342",
@@ -4587,7 +4621,7 @@ window.__GOODREADS_LIBRARY__ = {
     "repairStats": {
       "restoredDateRead": 0,
       "restoredRating": 0,
-      "preservedCurrentlyReading": 2
+      "preservedCurrentlyReading": 1
     }
   }
 };
