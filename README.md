@@ -9,6 +9,7 @@ Static web app to browse your own Goodreads library quickly, with local sync and
 - Publishes a fully static site that you can host on GitHub Pages
 - Focuses only on your books, your shelves, and your ratings
 - Filters by publication year or reading/finish year. Reading years use Goodreads' recorded `dateRead`, not the date a book was added; books without a finish date remain visible under "Todos".
+- Infinite scroll appends books in batches (24 on desktop, 12 on mobile), with lazy-loaded covers and an accessible "Cargar más" button that also works without automatic scrolling. Changing filters or sorting restarts the list.
 
 ## Local setup
 

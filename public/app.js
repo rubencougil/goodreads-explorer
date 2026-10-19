@@ -1,5 +1,4 @@
 const DATA_PATH = 'data/library.json';
-const PAGE_SIZE = 24;
 
 const elements = {
   heroDescription: document.querySelector('#hero-description'),
@@ -19,15 +18,16 @@ const elements = {
   resultsMeta: document.querySelector('#results-meta'),
   results: document.querySelector('#results'),
   emptyState: document.querySelector('#empty-state'),
-  pagination: document.querySelector('#pagination'),
-  prevPage: document.querySelector('#prev-page'),
-  nextPage: document.querySelector('#next-page'),
-  pageInfo: document.querySelector('#page-info'),
+  loadMore: document.querySelector('#load-more'),
+  loadMoreButton: document.querySelector('#load-more-button'),
+  loadStatus: document.querySelector('#load-status'),
   template: document.querySelector('#book-card-template')
 };
 
 let books = [];
-let currentPage = 1;
+let filteredBooks = [];
+let renderedCount = 0;
+let loadObserver = null;
 const mobileFilterQuery = window.matchMedia('(max-width: 640px)');
 const MOBILE_PAGE_SIZE = 12;
 const DESKTOP_PAGE_SIZE = 24;
@@ -347,31 +347,16 @@ function setCover(node, book, eager = false) {
   };
 }
 
-function renderBooks(filtered) {
-  elements.results.innerHTML = '';
-
-  if (!filtered.length) {
-    elements.emptyState.hidden = false;
-    elements.pagination.hidden = true;
-    return;
-  }
-
-  elements.emptyState.hidden = true;
-
-  const pageSize = getPageSize();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  currentPage = Math.min(Math.max(1, currentPage), totalPages);
-  const startIndex = (currentPage - 1) * pageSize;
-  const pageRecords = filtered.slice(startIndex, startIndex + pageSize);
+function renderBooks(records, startIndex) {
   const fragment = document.createDocumentFragment();
 
-  pageRecords.forEach((book, index) => {
+  records.forEach((book, index) => {
     const node = elements.template.content.firstElementChild.cloneNode(true);
     const bookUrl = resolveBookUrl(book);
     const authorUrl = String(book.authorUrl || '').trim();
     const isCurrentlyReading = deriveStatus(book) === 'currently-reading';
 
-    setCover(node, book, index < 2);
+    setCover(node, book, startIndex + index < 2);
     node.classList.toggle('is-currently-reading', isCurrentlyReading);
 
     const coverLink = node.querySelector('.book-cover-link');
@@ -443,23 +428,36 @@ function renderBooks(filtered) {
   });
 
   elements.results.appendChild(fragment);
+}
 
-  elements.pagination.hidden = totalPages <= 1;
-  elements.pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-  elements.prevPage.disabled = currentPage === 1;
-  elements.nextPage.disabled = currentPage === totalPages;
+function loadNextBatch() {
+  loadObserver?.unobserve(elements.loadMore);
+  const records = filteredBooks.slice(renderedCount, renderedCount + getPageSize());
+  if (records.length) {
+    renderBooks(records, renderedCount);
+    renderedCount += records.length;
+  }
+
+  const hasMore = renderedCount < filteredBooks.length;
+  elements.loadMore.hidden = filteredBooks.length === 0;
+  elements.loadMoreButton.hidden = !hasMore;
+  elements.loadStatus.textContent = filteredBooks.length
+    ? `${renderedCount} de ${filteredBooks.length} libros mostrados`
+    : '';
+  if (hasMore) {
+    loadObserver?.observe(elements.loadMore);
+  }
 }
 
 function render() {
-  const filtered = applyFilters();
-  renderBooks(filtered);
-  elements.resultsMeta.textContent = `${filtered.length} de ${books.length} libros`;
-  elements.resultsTitle.textContent = filtered.length === books.length ? 'Tus libros' : 'Libros filtrados';
-}
-
-function resetAndRender() {
-  currentPage = 1;
-  render();
+  loadObserver?.disconnect();
+  filteredBooks = applyFilters();
+  renderedCount = 0;
+  elements.results.innerHTML = '';
+  elements.emptyState.hidden = filteredBooks.length > 0;
+  loadNextBatch();
+  elements.resultsMeta.textContent = `${filteredBooks.length} de ${books.length} libros`;
+  elements.resultsTitle.textContent = filteredBooks.length === books.length ? 'Tus libros' : 'Libros filtrados';
 }
 
 function installEvents() {
@@ -471,17 +469,21 @@ function installEvents() {
     elements.yearFilter,
     elements.readYearFilter,
     elements.sortBy
-  ].forEach((control) => control.addEventListener('input', resetAndRender));
+  ].forEach((control) => control.addEventListener('input', render));
 
-  elements.prevPage.addEventListener('click', () => {
-    currentPage -= 1;
-    render();
-  });
+  elements.loadMoreButton.addEventListener('click', loadNextBatch);
+}
 
-  elements.nextPage.addEventListener('click', () => {
-    currentPage += 1;
-    render();
-  });
+function installInfiniteScroll() {
+  if (typeof IntersectionObserver !== 'function') {
+    return;
+  }
+
+  loadObserver = new IntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting)) {
+      loadNextBatch();
+    }
+  }, { rootMargin: '400px 0px' });
 }
 
 function syncAdvancedFiltersVisibility() {
@@ -555,6 +557,7 @@ async function init() {
       mobileFilterQuery.addListener(syncAdvancedFiltersVisibility);
     }
     installEvents();
+    installInfiniteScroll();
     render();
     if (elements.results) {
       elements.results.removeAttribute('aria-busy');
@@ -571,7 +574,8 @@ async function init() {
       elements.results.innerHTML = '';
     }
     elements.emptyState.hidden = false;
-    elements.pagination.hidden = true;
+    loadObserver?.disconnect();
+    elements.loadMore.hidden = true;
   }
 }
 

@@ -9,7 +9,7 @@
     <title>Goodreads Browser</title>
     <meta
       name="description"
-      content="Explora tu biblioteca de Goodreads con portadas, filtros rápidos, paginación y enlaces directos a libros y autores."
+      content="Explora tu biblioteca de Goodreads con portadas, filtros rápidos, scroll infinito y enlaces directos a libros y autores."
     />
     <meta name="theme-color" content="#f3eee2" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -58,10 +58,9 @@
             <p>Prueba a limpiar algún filtro o vuelve a sincronizar manualmente.</p>
           </div>
 
-          <div id="pagination" class="pagination" hidden>
-            <button id="prev-page" class="nav-button" type="button">Anterior</button>
-            <span id="page-info" class="page-info"></span>
-            <button id="next-page" class="nav-button" type="button">Siguiente</button>
+          <div id="load-more" class="load-more" hidden>
+            <p id="load-status" class="load-status" role="status" aria-live="polite" aria-atomic="true"></p>
+            <button id="load-more-button" class="nav-button" type="button" aria-controls="results">Cargar más</button>
           </div>
         </section>
 

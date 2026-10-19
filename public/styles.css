@@ -665,13 +665,17 @@ pre {
   text-align: center;
 }
 
-.pagination {
+.load-more {
   margin-top: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.load-more[hidden] {
+  display: none;
 }
 
 .nav-button {
@@ -690,7 +694,7 @@ pre {
   opacity: 0.45;
 }
 
-.page-info {
+.load-status {
   color: var(--ink-soft);
   font-weight: 700;
 }
