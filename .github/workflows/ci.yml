@@ -28,6 +28,9 @@ jobs:
           node --check public/app.js
           node --check public/stats.js
 
+      - name: Test sync enrichment
+        run: npm test
+
       - name: Serve static files and smoke test
         run: |
           set -euo pipefail

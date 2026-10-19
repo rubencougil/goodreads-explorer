@@ -43,6 +43,7 @@ Notes:
 - If Goodreads blocks the browser, times out, or does not expose a fresh export, the sync exits without changing the generated library files. This prevents an old CSV from being published with a new sync timestamp.
 - To intentionally rebuild from the newest local CSV, run `GOODREADS_ALLOW_STALE_FALLBACK=true npm run sync:static`. This recovery mode keeps `lastSyncedAt` set to the CSV file's actual modification time.
 - The generated static data is written to `public/data/library.json`.
+- Covers and other missing metadata are fetched from each book's Goodreads page first, with search as a fallback. Metadata requests have bounded redirects and timeouts; incomplete enrichment is reported as a warning, including missing covers in the data integrity check.
 - Raw CSV exports are kept in `data/`.
 - `publicDisplayName` is optional but recommended if you want the published site to avoid showing your real name.
 - The public JSON is sanitized to keep only the fields used by the site and avoid publishing Goodreads export fields such as private notes, owned copies, ISBNs, or other raw metadata.

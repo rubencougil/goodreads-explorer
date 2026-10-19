@@ -341,18 +341,35 @@ function upgradeGoodreadsCoverUrl(url) {
   return text;
 }
 
-function fetchText(url) {
+function fetchText(url, redirectsLeft = 3) {
   return new Promise((resolve, reject) => {
     const req = https.get(
       url,
       {
         headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0',
           'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
         }
       },
       (res) => {
+        res.on('error', reject);
+        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+          res.resume();
+          let redirectUrl;
+          try {
+            redirectUrl = new URL(res.headers.location, url);
+          } catch (error) {
+            reject(error);
+            return;
+          }
+          if (redirectsLeft <= 0 || redirectUrl.href === url || redirectUrl.protocol !== 'https:') {
+            reject(new Error(`Invalid or repeated Goodreads redirect from ${url}`));
+            return;
+          }
+          resolve(fetchText(redirectUrl.href, redirectsLeft - 1));
+          return;
+        }
+
         let body = '';
         res.on('data', (chunk) => {
           body += chunk;
@@ -367,6 +384,9 @@ function fetchText(url) {
     );
 
     req.on('error', reject);
+    req.setTimeout(20_000, () => {
+      req.destroy(new Error(`Goodreads metadata request timed out: ${url}`));
+    });
   });
 }
 
@@ -492,7 +512,7 @@ async function enrichBooks(books, onProgress) {
   }
 
   const enrichedTargets = await mapWithConcurrency(targets, ENRICH_CONCURRENCY, async (book, index) => {
-    const urls = buildSearchQueries(book);
+    const urls = [...new Set([buildBookUrl(book.bookId), ...buildSearchQueries(book)].filter(Boolean))];
 
     if (!urls.length) {
       return book;
@@ -502,12 +522,14 @@ async function enrichBooks(books, onProgress) {
       onProgress?.(`Enriqueciendo portadas y nota Goodreads (${index + 1}/${books.length})...`);
     }
 
-    try {
-      let nextBook = book;
+    let nextBook = book;
+    const failures = [];
 
-      for (const url of urls) {
+    for (const url of urls) {
+      try {
         const { statusCode, body } = await fetchText(url);
         if (statusCode < 200 || statusCode >= 300 || !body) {
+          failures.push(`HTTP ${statusCode} from ${url}`);
           continue;
         }
 
@@ -536,12 +558,18 @@ async function enrichBooks(books, onProgress) {
         if ((pickedCover && pickedRating) || (pickedCover && pickedAuthor && pickedBookUrl)) {
           break;
         }
+      } catch (error) {
+        failures.push(`${url}: ${error.message}`);
       }
-
-      return nextBook;
-    } catch (error) {
-      return book;
     }
+
+    if (needsEnrichment(nextBook)) {
+      onProgress?.(
+        `WARNING: Incomplete Goodreads metadata for "${book.title}" (${book.bookId}). ` +
+        (failures.length ? failures.join('; ') : 'No matching metadata found.')
+      );
+    }
+    return nextBook;
   });
 
   const enrichedById = new Map(
@@ -560,6 +588,13 @@ async function enrichBooks(books, onProgress) {
 function validateLibraryBooks(books) {
   const safeBooks = Array.isArray(books) ? books : [];
   const categories = [
+    {
+      key: 'missingCover',
+      severity: 'warning',
+      title: 'Libros sin portada',
+      help: 'Reintenta el sync para recuperar la portada desde la página del libro en Goodreads.',
+      matches: (book) => !String(book.coverUrl || '').trim()
+    },
     {
       key: 'readMissingDateRead',
       severity: 'warning',
@@ -859,6 +894,7 @@ async function syncGoodreads(options = {}) {
 }
 
 module.exports = {
+  enrichBooks,
   parseLibraryCsv,
   syncGoodreads,
   validateLibraryBooks

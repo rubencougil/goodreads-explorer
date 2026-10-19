@@ -12,9 +12,9 @@
         "title": "Victorian Psycho",
         "sortTitle": "victorian psycho",
         "author": "Virginia Feito",
-        "authorUrl": "",
+        "authorUrl": "https://www.goodreads.com/author/show/20177041.Virginia_Feito",
         "rating": 4.5,
-        "averageRating": 0,
+        "averageRating": 3.53,
         "year": "2025",
         "pages": 208,
         "bookshelves": [],
@@ -22,7 +22,7 @@
         "dateRead": "2026-10-18",
         "dateAdded": "2026-10-16",
         "url": "https://www.goodreads.com/book/show/213395480",
-        "coverUrl": "",
+        "coverUrl": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1737737985i/213395480.jpg",
         "searchUrl": "https://www.goodreads.com/search?q=Victorian%20Psycho%20Virginia%20Feito&search_type=books"
       },
       {
@@ -30,9 +30,9 @@
         "title": "Dracula",
         "sortTitle": "dracula",
         "author": "Bram Stoker",
-        "authorUrl": "",
+        "authorUrl": "https://www.goodreads.com/author/show/6988.Bram_Stoker",
         "rating": 0,
-        "averageRating": 0,
+        "averageRating": 4.03,
         "year": "1897",
         "pages": 488,
         "bookshelves": [
@@ -42,7 +42,7 @@
         "dateRead": "",
         "dateAdded": "2026-10-16",
         "url": "https://www.goodreads.com/book/show/17245",
-        "coverUrl": "",
+        "coverUrl": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1387151694i/17245.jpg",
         "searchUrl": "https://www.goodreads.com/search?q=Dracula%20Bram%20Stoker&search_type=books"
       },
       {
@@ -50,9 +50,9 @@
         "title": "The Witch",
         "sortTitle": "the witch",
         "author": "Freida McFadden",
-        "authorUrl": "",
+        "authorUrl": "https://www.goodreads.com/author/show/7244758.Freida_McFadden",
         "rating": 1,
-        "averageRating": 0,
+        "averageRating": 4.08,
         "year": "2026",
         "pages": 352,
         "bookshelves": [],
@@ -60,7 +60,7 @@
         "dateRead": "",
         "dateAdded": "2026-10-15",
         "url": "https://www.goodreads.com/book/show/249334199",
-        "coverUrl": "",
+        "coverUrl": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1781189968i/249334199.jpg",
         "searchUrl": "https://www.goodreads.com/search?q=The%20Witch%20Freida%20McFadden&search_type=books"
       },
       {
@@ -4479,12 +4479,21 @@
       "counts": {
         "warningCount": 79,
         "infoCount": 7,
+        "missingCover": 0,
         "readMissingDateRead": 79,
         "currentlyReadingWithDateRead": 0,
         "zeroRatedWithDateRead": 3,
         "dateReadBeforeDateAdded": 4
       },
       "categories": [
+        {
+          "key": "missingCover",
+          "severity": "warning",
+          "title": "Libros sin portada",
+          "help": "Reintenta el sync para recuperar la portada desde la página del libro en Goodreads.",
+          "count": 0,
+          "samples": []
+        },
         {
           "key": "readMissingDateRead",
           "severity": "warning",
