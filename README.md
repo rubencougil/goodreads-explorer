@@ -8,6 +8,7 @@ Static web app to browse your own Goodreads library quickly, with local sync and
 - Converts the export into `public/data/library.json`
 - Publishes a fully static site that you can host on GitHub Pages
 - Focuses only on your books, your shelves, and your ratings
+- Filters by publication year or reading/finish year. Reading years use Goodreads' recorded `dateRead`, not the date a book was added; books without a finish date remain visible under "Todos".
 
 ## Local setup
 

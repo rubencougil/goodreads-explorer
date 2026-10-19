@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-19T13:38:18.506Z",
+  "generatedAt": "2026-10-19T13:46:09.023Z",
   "profile": {
     "displayName": "Mi biblioteca"
   },
   "library": {
-    "count": 248,
-    "lastSyncedAt": "2026-10-19T13:38:16.881Z",
+    "count": 247,
+    "lastSyncedAt": "2026-10-19T13:46:08.895Z",
     "books": [
       {
         "bookId": "213395480",
@@ -44,24 +44,6 @@
         "url": "https://www.goodreads.com/book/show/17245",
         "coverUrl": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1387151694i/17245.jpg",
         "searchUrl": "https://www.goodreads.com/search?q=Dracula%20Bram%20Stoker&search_type=books"
-      },
-      {
-        "bookId": "249334199",
-        "title": "The Witch",
-        "sortTitle": "the witch",
-        "author": "Freida McFadden",
-        "authorUrl": "https://www.goodreads.com/author/show/7244758.Freida_McFadden",
-        "rating": 1,
-        "averageRating": 4.08,
-        "year": "2026",
-        "pages": 352,
-        "bookshelves": [],
-        "exclusiveShelf": "read",
-        "dateRead": "",
-        "dateAdded": "2026-10-15",
-        "url": "https://www.goodreads.com/book/show/249334199",
-        "coverUrl": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1781189968i/249334199.jpg",
-        "searchUrl": "https://www.goodreads.com/search?q=The%20Witch%20Freida%20McFadden&search_type=books"
       },
       {
         "bookId": "57310370",
@@ -4477,10 +4459,10 @@
     "validation": {
       "hasWarnings": true,
       "counts": {
-        "warningCount": 79,
+        "warningCount": 78,
         "infoCount": 7,
         "missingCover": 0,
-        "readMissingDateRead": 79,
+        "readMissingDateRead": 78,
         "currentlyReadingWithDateRead": 0,
         "zeroRatedWithDateRead": 3,
         "dateReadBeforeDateAdded": 4
@@ -4499,16 +4481,8 @@
           "severity": "warning",
           "title": "Libros en read sin dateRead",
           "help": "Usa dateAdded como respaldo para ordenar y, si puedes, intenta recuperar la fecha de lectura en el sync.",
-          "count": 79,
+          "count": 78,
           "samples": [
-            {
-              "bookId": "249334199",
-              "title": "The Witch",
-              "exclusiveShelf": "read",
-              "dateRead": "",
-              "dateAdded": "2026-10-15",
-              "rating": 1
-            },
             {
               "bookId": "17415342",
               "title": "El fin de los días",
@@ -4539,6 +4513,14 @@
               "exclusiveShelf": "read",
               "dateRead": "",
               "dateAdded": "2025-01-17",
+              "rating": 5
+            },
+            {
+              "bookId": "7114018",
+              "title": "A esmorga",
+              "exclusiveShelf": "read",
+              "dateRead": "",
+              "dateAdded": "2021-02-15",
               "rating": 5
             }
           ]

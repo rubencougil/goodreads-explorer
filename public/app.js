@@ -12,6 +12,7 @@ const elements = {
   statusFilter: document.querySelector('#status-filter'),
   ratingFilter: document.querySelector('#rating-filter'),
   yearFilter: document.querySelector('#year-filter'),
+  readYearFilter: document.querySelector('#read-year-filter'),
   sortBy: document.querySelector('#sort-by'),
   advancedFilters: document.querySelector('#advanced-filters'),
   resultsTitle: document.querySelector('#results-title'),
@@ -146,6 +147,11 @@ function dateScore(value) {
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 }
 
+function readingYear(book) {
+  const date = new Date(book.dateRead);
+  return Number.isNaN(date.getTime()) ? '' : String(date.getUTCFullYear());
+}
+
 function readingOrderScore(book) {
   const readScore = dateScore(book.dateRead);
   if (readScore) {
@@ -252,6 +258,7 @@ function applyFilters() {
   const status = elements.statusFilter.value;
   const minRating = Number(elements.ratingFilter.value);
   const year = elements.yearFilter.value;
+  const readYear = elements.readYearFilter.value;
   const sortBy = elements.sortBy.value;
 
   const filtered = books.filter((book) => {
@@ -274,6 +281,10 @@ function applyFilters() {
     }
 
     if (year !== 'all' && String(book.year || '') !== year) {
+      return false;
+    }
+
+    if (readYear !== 'all' && readingYear(book) !== readYear) {
       return false;
     }
 
@@ -458,6 +469,7 @@ function installEvents() {
     elements.statusFilter,
     elements.ratingFilter,
     elements.yearFilter,
+    elements.readYearFilter,
     elements.sortBy
   ].forEach((control) => control.addEventListener('input', resetAndRender));
 
@@ -502,9 +514,13 @@ async function init() {
     const years = [...new Set(books.map((book) => String(book.year || '')).filter(Boolean))].sort(
       (left, right) => Number(right) - Number(left)
     );
+    const readYears = [...new Set(books.map(readingYear).filter(Boolean))].sort(
+      (left, right) => Number(right) - Number(left)
+    );
 
     populateSelect(elements.shelfFilter, shelfValues);
     populateSelect(elements.yearFilter, years);
+    populateSelect(elements.readYearFilter, readYears);
 
     const ratedBooks = books.filter((book) => Number.isFinite(book.rating) && book.rating > 0);
     const averageRating = ratedBooks.reduce((sum, book) => sum + book.rating, 0) / (ratedBooks.length || 1);
