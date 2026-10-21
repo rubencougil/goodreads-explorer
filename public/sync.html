@@ -7,10 +7,16 @@
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <title>Goodreads Browser Sincronización</title>
+    <meta name="description" content="Consulta el estado de tu biblioteca y las instrucciones para sincronizar Goodreads en tu máquina." />
+    <meta name="theme-color" content="#f3eee2" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preload" href="data/library.json" as="fetch" crossorigin />
     <link rel="stylesheet" href="styles.css" />
+    <script src="static-data.js" defer></script>
+    <script src="sync.js" defer></script>
   </head>
   <body class="sync-page">
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand-mark" href="index.html">Goodreads Browser</a>
@@ -21,7 +27,7 @@
       </div>
     </header>
 
-    <main class="page-shell sync-shell">
+    <main id="main-content" class="page-shell sync-shell" tabindex="-1">
       <section class="hero-card compact-hero">
         <p class="eyebrow">Sincronización local</p>
         <h1>Actualiza tus datos estáticos de Goodreads en local.</h1>
@@ -38,7 +44,14 @@
               <h2>Estado actual de la biblioteca</h2>
             </div>
           </div>
-          <div id="sync-summary" class="stack-list"></div>
+          <noscript><p>Activa JavaScript para consultar el estado de la biblioteca.</p></noscript>
+          <div id="sync-summary" class="stack-list" role="status" aria-busy="true">
+            <div class="stack-item"><strong>Perfil</strong><span>Cargando...</span></div>
+            <div class="stack-item"><strong>Libros</strong><span>Cargando...</span></div>
+            <div class="stack-item"><strong>Última sincronización</strong><span>Cargando...</span></div>
+            <div class="stack-item"><strong>Fichero de datos</strong><span>public/data/library.json</span></div>
+          </div>
+          <button id="retry-button" class="nav-button" type="button" hidden>Reintentar</button>
         </article>
 
         <article class="panel">
@@ -74,6 +87,5 @@ npm run serve:static</code></pre>
       </section>
     </main>
 
-    <script src="sync.js"></script>
   </body>
 </html>

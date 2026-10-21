@@ -5,6 +5,7 @@ const vm = require('node:vm');
 const { test } = require('node:test');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+const dataSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'static-data.js'), 'utf8');
 const fixtures = [
   { title: 'Older finish', dateRead: '2025-12-31', dateAdded: '2026-01-01', year: '2000', rating: 3 },
   { title: 'New finish', dateRead: '2026-01-01', dateAdded: '2025-01-01', year: '2000', rating: 5 },
@@ -16,6 +17,9 @@ const fixtures = [
 function createApp({ mobile = false } = {}) {
   const controls = new Map();
   const context = vm.createContext({
+    URL,
+    AbortSignal,
+    console,
     window: { matchMedia: () => ({ matches: mobile }) },
     fetch: () => new Promise(() => {}),
     document: {
@@ -35,6 +39,7 @@ function createApp({ mobile = false } = {}) {
       createDocumentFragment: () => ({ appendChild() {} })
     }
   });
+  vm.runInContext(dataSource, context);
   vm.runInContext(source, context);
   vm.runInContext(`books = ${JSON.stringify(fixtures)};`, context);
   return {
@@ -74,6 +79,36 @@ test('reading year uses UTC at the year boundary', () => {
   const app = createApp();
   assert.equal(vm.runInContext('readingYear({ dateRead: "2026-01-01" })', app.context), '2026');
   assert.equal(vm.runInContext('readingYear({ dateRead: "" })', app.context), '');
+});
+
+test('missing numeric metadata stays unknown instead of becoming zero', () => {
+  const app = createApp();
+  const book = vm.runInContext('normalizeBook({ rating: null, averageRating: "", pages: undefined })', app.context);
+  assert.equal(book.rating, null);
+  assert.equal(book.averageRating, null);
+  assert.equal(book.pages, null);
+  assert.equal(vm.runInContext('formatRating(normalizeBook({}).rating)', app.context), 'Sin nota');
+  assert.equal(vm.runInContext('normalizeBook({ rating: 0 }).rating', app.context), null);
+  assert.equal(vm.runInContext('normalizeBook({ rating: "4.5" }).rating', app.context), 4.5);
+});
+
+test('cover variants resize original and height-constrained Goodreads images by width', () => {
+  const app = createApp();
+  for (const suffix of ['', '._SY475_', '._SX200_', '._SX200_SY300_']) {
+    const url = `https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1i/123${suffix}.jpg`;
+    assert.equal(vm.runInContext(`buildGoodreadsCoverVariant(${JSON.stringify(url)}, 318)`, app.context),
+      'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1i/123._SX318_.jpg');
+  }
+  assert.equal(vm.runInContext('buildGoodreadsCoverVariant("https://example.com/goodreads.com/cover.jpg", 318)', app.context), '');
+});
+
+test('book links accept only absolute HTTP or HTTPS URLs', () => {
+  const app = createApp();
+  for (const value of ['javascript:alert(1)', 'data:text/html,test', '//example.com', 'invalid']) {
+    assert.equal(vm.runInContext(`normalizeBook({ url: ${JSON.stringify(value)} }).url`, app.context), '');
+  }
+  assert.equal(vm.runInContext('normalizeBook({ url: "https://www.goodreads.com/book/show/123" }).url', app.context),
+    'https://www.goodreads.com/book/show/123');
 });
 
 test('changing read year rerenders the filtered list', () => {

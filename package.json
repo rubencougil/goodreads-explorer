@@ -5,6 +5,7 @@
   "description": "Browse your Goodreads library locally and publish the static site to GitHub Pages.",
   "scripts": {
     "test": "node --test",
+    "test:browser": "node --test scripts/browser-check.cjs",
     "sync:static": "node scripts/sync-static-data.js",
     "serve:static": "python3 -m http.server 3000 -d public"
   },

@@ -14,26 +14,31 @@
     <meta name="theme-color" content="#f3eee2" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="manifest" href="site.webmanifest" />
-    <link rel="preconnect" href="https://m.media-amazon.com" crossorigin />
+    <link rel="preconnect" href="https://m.media-amazon.com" />
+    <link rel="preconnect" href="https://i.gr-assets.com" />
+    <link rel="preload" href="data/library.json" as="fetch" crossorigin />
     <link rel="stylesheet" href="styles.css" />
+    <script src="static-data.js" defer></script>
+    <script src="app.js" defer></script>
   </head>
   <body class="library-page">
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand-mark" href="index.html">Goodreads Browser</a>
         <nav class="top-links" aria-label="Principal">
-          <a class="is-active" href="index.html">Biblioteca</a>
+          <a class="is-active" href="index.html" aria-current="page">Biblioteca</a>
           <a href="stats.html">Estadísticas</a>
         </nav>
       </div>
     </header>
 
-    <main class="page-shell library-shell">
+    <main id="main-content" class="page-shell library-shell" tabindex="-1">
       <section class="explore-header" aria-label="Explorar biblioteca">
         <div class="explore-header-copy">
-          <p class="eyebrow">Explorar</p>
+          <h1>Explorar biblioteca</h1>
           <p id="hero-description" class="hero-copy">
-            Última sincronización: 27 ago 2026. Busca por título, autor o estantería.
+            Busca por título, autor o estantería.
           </p>
         </div>
         <button id="filters-toggle" class="explore-toggle" type="button" aria-controls="advanced-filters" aria-expanded="false">
@@ -42,28 +47,6 @@
       </section>
 
       <section class="content-grid">
-        <section class="panel results-panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Biblioteca</p>
-              <h2 id="results-title">Tus libros</h2>
-            </div>
-            <p id="results-meta" class="meta-text">Cargando...</p>
-          </div>
-
-          <div id="results" class="book-grid"></div>
-
-          <div id="empty-state" class="empty-state" hidden>
-            <h3>No hay libros con estos filtros.</h3>
-            <p>Prueba a limpiar algún filtro o vuelve a sincronizar manualmente.</p>
-          </div>
-
-          <div id="load-more" class="load-more" hidden>
-            <p id="load-status" class="load-status" role="status" aria-live="polite" aria-atomic="true"></p>
-            <button id="load-more-button" class="nav-button" type="button" aria-controls="results">Cargar más</button>
-          </div>
-        </section>
-
         <aside class="panel filter-panel">
           <div class="panel-header">
             <div>
@@ -138,6 +121,35 @@
             </div>
           </details>
         </aside>
+
+        <section class="panel results-panel" aria-labelledby="results-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Biblioteca</p>
+              <h2 id="results-title">Tus libros</h2>
+            </div>
+            <p id="results-meta" class="meta-text" role="status">Cargando...</p>
+          </div>
+
+          <noscript><p>Activa JavaScript para buscar y explorar tu biblioteca.</p></noscript>
+          <div id="results" class="book-grid" aria-busy="true"></div>
+
+          <div id="empty-state" class="empty-state" hidden>
+            <h3>No hay libros con estos filtros.</h3>
+            <p>Prueba a limpiar algún filtro o vuelve a sincronizar manualmente.</p>
+          </div>
+
+          <div id="error-state" class="empty-state" hidden>
+            <h3>No se pudo cargar la biblioteca.</h3>
+            <p id="error-message" role="alert"></p>
+            <button id="retry-button" class="nav-button" type="button">Reintentar</button>
+          </div>
+
+          <div id="load-more" class="load-more" hidden>
+            <p id="load-status" class="load-status" role="status" aria-live="polite" aria-atomic="true"></p>
+            <button id="load-more-button" class="nav-button" type="button" aria-controls="results">Cargar más</button>
+          </div>
+        </section>
       </section>
     </main>
 
@@ -165,7 +177,5 @@
         </div>
       </article>
     </template>
-
-    <script src="app.js"></script>
   </body>
 </html>

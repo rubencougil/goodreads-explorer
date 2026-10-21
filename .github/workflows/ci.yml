@@ -27,9 +27,17 @@ jobs:
         run: |
           node --check public/app.js
           node --check public/stats.js
+          node --check public/static-data.js
+          node --check public/sync.js
 
-      - name: Test sync enrichment
+      - name: Test data, filters, statistics and sync enrichment
         run: npm test
+
+      - name: Install test browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Test browser behavior
+        run: npm run test:browser
 
       - name: Serve static files and smoke test
         run: |

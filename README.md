@@ -10,6 +10,9 @@ Static web app to browse your own Goodreads library quickly, with local sync and
 - Focuses only on your books, your shelves, and your ratings
 - Filters by publication year or reading/finish year. Reading years use Goodreads' recorded `dateRead`, not the date a book was added; books without a finish date remain visible under "Todos".
 - Infinite scroll appends books in batches (24 on desktop, 12 on mobile), with lazy-loaded covers and an accessible "Cargar más" button that also works without automatic scrolling. Changing filters or sorting restarts the list.
+- Search and filters stay above the results on tablet and mobile. Keyboard navigation includes a skip link, visible focus indicators, and labelled reading-chart points; reduced-motion preferences are respected.
+- Covers use responsive Goodreads image sizes, retry the original URL if a resized image fails, and retain accessible link names even without a cover.
+- Reading statistics use UTC dates, matching the reading-year filter. The monthly timeline includes months with zero reads and shows up to the last 12 consecutive months ending at the latest recorded reading.
 
 ## Local setup
 
@@ -45,6 +48,7 @@ Notes:
 - If Goodreads blocks the browser, times out, or does not expose a fresh export, the sync exits without changing the generated library files. This prevents an old CSV from being published with a new sync timestamp.
 - To intentionally rebuild from the newest local CSV, run `GOODREADS_ALLOW_STALE_FALLBACK=true npm run sync:static`. This recovery mode keeps `lastSyncedAt` set to the CSV file's actual modification time.
 - The generated static data is written to `public/data/library.json`.
+- All pages share the same validated JSON loader with a 15-second request timeout and a visible retry action on failure. The duplicate `library.js` data bundle is no longer generated or needed.
 - Covers and other missing metadata are fetched from each book's Goodreads page first, with search as a fallback. Metadata requests have bounded redirects and timeouts; incomplete enrichment is reported as a warning, including missing covers in the data integrity check.
 - Raw CSV exports are kept in `data/`.
 - `publicDisplayName` is optional but recommended if you want the published site to avoid showing your real name.
@@ -55,6 +59,20 @@ Notes:
 ```bash
 npm run serve:static
 ```
+
+Open <http://localhost:3000>. Use the HTTP preview rather than opening the HTML files directly so the browser can fetch the shared JSON.
+
+## Development checks
+
+```bash
+npm test
+npx playwright install chromium
+npm run test:browser
+```
+
+The browser checks start and stop their own loopback server and cover desktop/mobile filtering, pagination, statistics, unsafe metadata, image fallbacks, and recovery from failed or malformed data. They use fixtures, not Goodreads or your logged-in session. CI runs both suites.
+
+For Lighthouse, start the local preview and audit both `http://localhost:3000/` and `http://localhost:3000/stats.html` with `npx lighthouse <url>`. Compare runs using the same device preset and server. Local Python preview does not provide compression or long-lived cache headers, and cover caching is controlled by the external image hosts. The deliberately retained `noindex` directives and `robots.txt` lower SEO scores; do not remove them just to raise Lighthouse scores.
 
 ## GitHub Pages
 

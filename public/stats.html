@@ -7,26 +7,33 @@
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <title>Goodreads Browser Estadísticas</title>
+    <meta name="description" content="Consulta tus estadísticas de Goodreads: notas, páginas y ritmo de lectura por mes y año." />
+    <meta name="theme-color" content="#f3eee2" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="preconnect" href="https://m.media-amazon.com" crossorigin />
+    <link rel="preload" href="data/library.json" as="fetch" crossorigin />
     <link rel="stylesheet" href="styles.css" />
+    <script src="static-data.js" defer></script>
+    <script src="stats.js" defer></script>
   </head>
   <body class="stats-page">
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand-mark" href="index.html">Goodreads Browser</a>
         <nav class="top-links" aria-label="Principal">
           <a href="index.html">Biblioteca</a>
-          <a class="is-active" href="stats.html">Estadísticas</a>
+          <a class="is-active" href="stats.html" aria-current="page">Estadísticas</a>
         </nav>
       </div>
     </header>
 
-    <main class="page-shell stats-shell">
+    <main id="main-content" class="page-shell stats-shell" tabindex="-1">
       <section class="hero-card compact-hero">
         <p class="eyebrow">Resumen de lectura</p>
-        <h1 id="stats-title">Tu biblioteca en números.</h1>
-        <p id="stats-subtitle" class="hero-copy">Cargando estadísticas de Goodreads...</p>
+        <h1 id="stats-title">Resumen lector de tu biblioteca.</h1>
+        <p id="stats-subtitle" class="hero-copy" role="status">Cargando estadísticas de Goodreads...</p>
+        <noscript><p>Activa JavaScript para consultar tus estadísticas.</p></noscript>
+        <button id="retry-button" class="nav-button" type="button" hidden>Reintentar</button>
       </section>
 
       <section class="metrics-grid">
@@ -44,7 +51,12 @@
               <h2>Lo más importante de tu biblioteca</h2>
             </div>
           </div>
-          <div id="summary-chips" class="summary-chips"></div>
+          <div id="summary-chips" class="summary-chips" aria-busy="true">
+            <article class="summary-chip" aria-hidden="true"><span>Leyendo ahora</span><strong>&nbsp;</strong></article>
+            <article class="summary-chip" aria-hidden="true"><span>Año más lector</span><strong>&nbsp;</strong></article>
+            <article class="summary-chip" aria-hidden="true"><span>Estantería principal</span><strong>&nbsp;</strong></article>
+            <article class="summary-chip" aria-hidden="true"><span>Longitud media</span><strong>&nbsp;</strong></article>
+          </div>
         </article>
 
         <article class="panel panel-span-2">
@@ -87,7 +99,5 @@
       </section>
     </main>
 
-    <script src="data/library.js"></script>
-    <script src="stats.js"></script>
   </body>
 </html>

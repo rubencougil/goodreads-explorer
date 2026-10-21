@@ -1,32 +1,34 @@
-const DATA_PATH = 'data/library.json';
+const { loadLibrary, parseDate } = window.GoodreadsData;
 
 const elements = {
-  summary: document.querySelector('#sync-summary')
+  summary: document.querySelector('#sync-summary'),
+  retryButton: document.querySelector('#retry-button')
 };
 
 function addItem(label, value) {
   const item = document.createElement('div');
   item.className = 'stack-item';
-  item.innerHTML = `<strong>${label}</strong><span>${value}</span>`;
+  const title = document.createElement('strong');
+  title.textContent = label;
+  const text = document.createElement('span');
+  text.textContent = value;
+  item.append(title, text);
   return item;
 }
 
 async function init() {
   try {
-    const payload = window.__GOODREADS_LIBRARY__
-      ? window.__GOODREADS_LIBRARY__
-      : await fetch(DATA_PATH).then((response) => {
-          if (!response.ok) {
-            throw new Error('Todavía no existe una biblioteca sincronizada.');
-          }
-          return response.json();
-        });
-    const books = Array.isArray(payload?.library?.books) ? payload.library.books : [];
-    const lastSyncedAt = payload?.library?.lastSyncedAt
-      ? new Date(payload.library.lastSyncedAt).toLocaleString('es-ES')
+    elements.retryButton.hidden = true;
+    elements.summary.setAttribute('aria-busy', 'true');
+    const payload = await loadLibrary();
+    const books = payload.library.books;
+    const date = parseDate(payload.library.lastSyncedAt);
+    const lastSyncedAt = date
+      ? date.toLocaleString('es-ES')
       : 'Todavía no sincronizado';
 
     if (elements.summary) {
+      elements.summary.textContent = '';
       elements.summary.appendChild(
         addItem('Perfil', String(payload?.profile?.displayName || 'Mi Goodreads'))
       );
@@ -35,12 +37,18 @@ async function init() {
       elements.summary.appendChild(addItem('Fichero de datos', 'public/data/library.json'));
     }
   } catch (error) {
+    console.error('No se pudo cargar el estado de sincronización.', error);
     if (elements.summary) {
+      elements.summary.textContent = '';
       elements.summary.appendChild(
         addItem('Estado', error.message || 'No se pudo cargar el estado de sincronización.')
       );
     }
+    elements.retryButton.hidden = false;
+  } finally {
+    elements.summary.removeAttribute('aria-busy');
   }
 }
 
+elements.retryButton.addEventListener('click', init);
 init();

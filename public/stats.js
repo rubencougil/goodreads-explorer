@@ -1,4 +1,4 @@
-const DATA_PATH = 'data/library.json';
+const { loadLibrary, parseDate } = window.GoodreadsData;
 
 const elements = {
   title: document.querySelector('#stats-title'),
@@ -9,12 +9,11 @@ const elements = {
   pages: document.querySelector('#stats-pages'),
   summaryChips: document.querySelector('#summary-chips'),
   ratingDistribution: document.querySelector('#rating-distribution'),
-  shelfDistribution: document.querySelector('#shelf-distribution'),
   yearList: document.querySelector('#year-list'),
   monthlyPaceValue: document.querySelector('#monthly-pace-value'),
   monthlyPaceMeta: document.querySelector('#monthly-pace-meta'),
   monthlyPaceList: document.querySelector('#monthly-pace-list'),
-  gapList: document.querySelector('#gap-list')
+  retryButton: document.querySelector('#retry-button')
 };
 
 function groupCount(items, keyFn) {
@@ -32,27 +31,16 @@ function groupCount(items, keyFn) {
 function createBarRow(label, value, max) {
   const row = document.createElement('div');
   row.className = 'bar-row';
-  const width = max > 0 ? Math.max(6, (value / max) * 100) : 0;
+  const width = max > 0 ? (value / max) * 100 : 0;
   row.innerHTML = `
     <div class="bar-row-topline">
-      <span>${label}</span>
+      <span></span>
       <strong>${value}</strong>
     </div>
     <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
   `;
+  row.querySelector('span').textContent = label;
   return row;
-}
-
-function createStackItem(title, meta, href = '') {
-  const item = document.createElement('div');
-  item.className = 'stack-item';
-
-  const label = href
-    ? `<a class="stack-link" href="${href}" target="_blank" rel="noreferrer">${title}</a>`
-    : `<span class="stack-title">${title}</span>`;
-
-  item.innerHTML = `<strong>${label}</strong><span class="stack-meta">${meta}</span>`;
-  return item;
 }
 
 function renderBarList(target, entries) {
@@ -84,7 +72,7 @@ function renderTimelineChart(target, entries) {
   const width = 840;
   const height = 300;
   const paddingLeft = 98;
-  const paddingRight = 18;
+  const paddingRight = 36;
   const paddingTop = 28;
   const paddingBottom = 60;
   const plotWidth = width - paddingLeft - paddingRight;
@@ -94,7 +82,7 @@ function renderTimelineChart(target, entries) {
   const barWidth = Math.min(48, Math.max(24, plotWidth / Math.max(entries.length, 6) * 0.55));
   const points = entries.map((entry, index) => {
     const x = paddingLeft + (step * index);
-    const barHeight = Math.max(12, (entry.value / max) * plotHeight);
+    const barHeight = (entry.value / max) * plotHeight;
     const y = paddingTop + (plotHeight - barHeight);
     return {
       ...entry,
@@ -130,9 +118,8 @@ function renderTimelineChart(target, entries) {
     .filter((value, index, values) => values.indexOf(value) === index)
     .sort((left, right) => right - left);
   const tickLabelX = 50;
-  const tickSpacing = tickValues.length > 1 ? plotHeight / (tickValues.length - 1) : 0;
-  const tickMarks = tickValues.map((value, index) => {
-    const y = paddingTop + (tickSpacing * index);
+  const tickMarks = tickValues.map((value) => {
+    const y = paddingTop + ((1 - value / max) * plotHeight);
     return `
       <line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" class="timeline-grid-line"></line>
       <text x="${tickLabelX}" y="${y + 4}" text-anchor="end" class="timeline-axis-value">${value}</text>
@@ -141,7 +128,7 @@ function renderTimelineChart(target, entries) {
 
   target.innerHTML = `
     <div class="timeline-chart-shell">
-      <svg class="timeline-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Serie mensual de lecturas">
+      <svg class="timeline-chart" viewBox="0 0 ${width} ${height}" role="group" aria-label="Serie mensual de lecturas">
         <g class="timeline-grid">
           ${tickMarks}
           <line x1="${paddingLeft}" y1="${paddingTop}" x2="${paddingLeft}" y2="${paddingTop + plotHeight}" class="timeline-axis-line"></line>
@@ -149,9 +136,9 @@ function renderTimelineChart(target, entries) {
         <path class="timeline-area" d="${areaPath}"></path>
         <path class="timeline-line" d="${linePath}"></path>
         ${points.map((point) => `
-          <rect class="timeline-hitbox" tabindex="0" x="${point.x - (barWidth / 2)}" y="${paddingTop}" width="${barWidth}" height="${plotHeight}" rx="14" ry="14" data-label="${point.label}" data-value="${point.value}"></rect>
+          <rect class="timeline-hitbox" role="img" aria-label="${point.label}: ${point.value} libros" tabindex="0" x="${point.x - (barWidth / 2)}" y="${paddingTop}" width="${barWidth}" height="${plotHeight}" rx="14" ry="14" data-label="${point.label}" data-value="${point.value}"></rect>
           <rect class="timeline-bar" x="${point.x - (barWidth / 2)}" y="${point.y}" width="${barWidth}" height="${point.barHeight}" rx="14" ry="14"></rect>
-          <circle class="timeline-point" tabindex="0" cx="${point.x}" cy="${point.y}" r="6" data-label="${point.label}" data-value="${point.value}"></circle>
+          <circle class="timeline-point" aria-hidden="true" cx="${point.x}" cy="${point.y}" r="6" data-label="${point.label}" data-value="${point.value}"></circle>
         `).join('')}
         ${labels}
       </svg>
@@ -162,7 +149,6 @@ function renderTimelineChart(target, entries) {
     </div>
   `;
 
-  const svg = target.querySelector('.timeline-chart');
   const shell = target.querySelector('.timeline-chart-shell');
   const tooltipValue = target.querySelector('#timeline-tooltip-value');
   const tooltipLabel = target.querySelector('#timeline-tooltip-label');
@@ -231,55 +217,20 @@ function renderTimelineChart(target, entries) {
     }
   };
 
-  const resolvePoint = (event) => {
-    const directMatch = event.target?.closest?.('.timeline-hitbox, .timeline-point');
-    if (directMatch) {
-      return directMatch;
-    }
-
-    const targetNode = document.elementFromPoint(event.clientX, event.clientY);
-    const fallbackMatch = targetNode?.closest?.('.timeline-hitbox, .timeline-point');
-    return fallbackMatch || null;
-  };
-
-  const handlePointerMove = (event) => {
-    const pointNode = resolvePoint(event);
-    if (!pointNode) {
-      hideTooltip();
-      return;
-    }
-    if (pointNode.dataset) {
-      showTooltip(pointNode, event);
-    }
-  };
-
   hitboxes.forEach((node) => {
-    node.addEventListener('mouseenter', (event) => showTooltip(node, event));
-    node.addEventListener('mousemove', moveTooltip);
+    node.addEventListener('pointerenter', (event) => showTooltip(node, event));
+    node.addEventListener('pointermove', moveTooltip);
+    node.addEventListener('pointerleave', hideTooltip);
     node.addEventListener('focus', (event) => showTooltip(node, event));
+    node.addEventListener('blur', hideTooltip);
+    node.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        hideTooltip();
+      }
+    });
     node.addEventListener('click', (event) => showTooltip(node, event));
   });
 
-  if (svg) {
-    svg.addEventListener('pointermove', handlePointerMove);
-    svg.addEventListener('mousemove', handlePointerMove);
-    svg.addEventListener('mouseleave', hideTooltip);
-  }
-}
-
-function renderStackList(target, entries, emptyMessage, createItem) {
-  if (!target) {
-    return;
-  }
-  target.innerHTML = '';
-  if (!entries.length) {
-    target.textContent = emptyMessage;
-    return;
-  }
-
-  entries.forEach((entry) => {
-    target.appendChild(createItem(entry));
-  });
 }
 
 function renderSummaryChips(target, entries) {
@@ -292,24 +243,18 @@ function renderSummaryChips(target, entries) {
   entries.forEach((entry) => {
     const chip = document.createElement('article');
     chip.className = 'summary-chip';
-    chip.innerHTML = `<span>${entry.label}</span><strong>${entry.value}</strong>`;
+    const label = document.createElement('span');
+    label.textContent = entry.label;
+    const value = document.createElement('strong');
+    value.textContent = entry.value;
+    chip.append(label, value);
     target.appendChild(chip);
   });
 }
 
-function parseDate(value) {
-  const text = String(value || '').trim();
-  if (!text) {
-    return null;
-  }
-
-  const date = new Date(text);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
 function toYear(value) {
   const date = parseDate(value);
-  return date ? date.getFullYear() : null;
+  return date ? date.getUTCFullYear() : null;
 }
 
 function toMonthKey(value) {
@@ -318,7 +263,7 @@ function toMonthKey(value) {
     return null;
   }
 
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
 function monthLabel(monthKey) {
@@ -327,8 +272,8 @@ function monthLabel(monthKey) {
     return String(monthKey || '');
   }
 
-  return new Intl.DateTimeFormat('es-ES', { month: 'short', year: 'numeric' })
-    .format(new Date(year, month - 1, 1))
+  return new Intl.DateTimeFormat('es-ES', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(year, month - 1, 1)))
     .replace('.', '');
 }
 
@@ -347,17 +292,26 @@ function formatCount(value, noun) {
   return `${value} ${noun}${value === 1 ? '' : 's'}`;
 }
 
+function recentMonths(counts) {
+  const keys = [...counts.keys()].sort();
+  if (!keys.length) {
+    return [];
+  }
+  const last = parseDate(`${keys[keys.length - 1]}-01`);
+  const span = Math.min(12, monthsBetweenInclusive(keys[0], keys[keys.length - 1]));
+  return Array.from({ length: span }, (_, index) => {
+    const date = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth() - span + index + 1, 1));
+    const key = toMonthKey(date.toISOString());
+    return { label: monthLabel(key), value: counts.get(key) || 0 };
+  });
+}
+
 async function init() {
   try {
-    const payload = window.__GOODREADS_LIBRARY__
-      ? window.__GOODREADS_LIBRARY__
-      : await fetch(DATA_PATH).then((response) => {
-          if (!response.ok) {
-            throw new Error('No se pudo cargar data/library.json');
-          }
-          return response.json();
-        });
-    const books = Array.isArray(payload?.library?.books) ? payload.library.books : [];
+    elements.retryButton.hidden = true;
+    elements.summaryChips.setAttribute('aria-busy', 'true');
+    const payload = await loadLibrary();
+    const books = payload.library.books;
     const displayName = String(payload?.profile?.displayName || 'Mi Goodreads').trim() || 'Mi Goodreads';
     const ratedBooks = books.filter((book) => Number.isFinite(Number(book.rating)) && Number(book.rating) > 0);
     const pageBooks = books.filter((book) => Number(book.pages) > 0);
@@ -403,18 +357,13 @@ async function init() {
       (book) => String(toYear(book.dateRead) || '')
     ).entries()]
       .map(([label, value]) => ({ label, value }))
-      .sort((left, right) => Number(right.label) - Number(left.label))
-      .slice(0, 12);
+      .sort((left, right) => Number(right.label) - Number(left.label));
 
     const monthCountsMap = groupCount(
       books.filter((book) => toMonthKey(book.dateRead)),
       (book) => toMonthKey(book.dateRead)
     );
-    const monthCounts = [...monthCountsMap.entries()]
-      .sort((left, right) => left[0].localeCompare(right[0]))
-      .slice(-12)
-      .map(([label, value]) => ({ label: monthLabel(label), value }))
-      ;
+    const monthCounts = recentMonths(monthCountsMap);
     const totalReadMonths = [...monthCountsMap.values()].reduce((sum, value) => sum + value, 0);
     const readMonthKeys = [...monthCountsMap.keys()].sort();
     const firstReadMonth = readMonthKeys[0] || null;
@@ -427,18 +376,9 @@ async function init() {
     }
     if (elements.monthlyPaceMeta) {
       elements.monthlyPaceMeta.textContent = monthSpan > 0
-        ? `Basado en ${totalReadMonths} lecturas repartidas en ${monthSpan} meses, desde ${monthLabel(firstReadMonth)} hasta ${monthLabel(lastReadMonth)}.`
+        ? `Basado en ${formatCount(totalReadMonths, 'lectura')} en ${monthSpan} ${monthSpan === 1 ? 'mes' : 'meses'}, desde ${monthLabel(firstReadMonth)} hasta ${monthLabel(lastReadMonth)}.`
         : 'Todavía no hay fechas de lectura suficientes para calcular un ritmo medio.';
     }
-
-    const biggestGaps = books
-      .filter((book) => Number.isFinite(Number(book.rating)) && Number(book.rating) > 0 && Number.isFinite(Number(book.averageRating)) && Number(book.averageRating) > 0)
-      .map((book) => ({
-        ...book,
-        gap: Math.abs(Number(book.rating) - Number(book.averageRating))
-      }))
-      .sort((left, right) => right.gap - left.gap || String(left.title || '').localeCompare(String(right.title || ''), 'es'))
-      .slice(0, 10);
 
     const currentlyReading = books.filter((book) => String(book.exclusiveShelf || '').trim() === 'currently-reading').length;
     const bestYearEntry = yearCounts.reduce((best, entry) => {
@@ -463,25 +403,20 @@ async function init() {
     ].filter(Boolean));
 
     renderBarList(elements.ratingDistribution, ratingEntries);
-    renderBarList(elements.shelfDistribution, shelfCounts);
-    renderBarList(elements.yearList, yearCounts);
+    renderBarList(elements.yearList, yearCounts.slice(0, 12));
     renderTimelineChart(elements.monthlyPaceList, monthCounts);
 
-    renderStackList(elements.gapList, biggestGaps, 'Todavía no hay suficientes notas para comparar.', (book) =>
-      createStackItem(
-        book.title,
-        `Tu nota ${Number(book.rating).toFixed(0)} • Goodreads ${Number(book.averageRating).toFixed(2)}`,
-        String(book.url || '')
-      )
-    );
-
-    document.body.classList.remove('is-loading');
   } catch (error) {
+    console.error('No se pudieron cargar las estadísticas.', error);
     if (elements.subtitle) {
       elements.subtitle.textContent = error.message || 'No se pudieron cargar las estadísticas.';
     }
-    document.body.classList.remove('is-loading');
+    elements.retryButton.hidden = false;
+    elements.summaryChips.textContent = 'No hay datos disponibles.';
+  } finally {
+    elements.summaryChips.removeAttribute('aria-busy');
   }
 }
 
+elements.retryButton.addEventListener('click', init);
 init();
